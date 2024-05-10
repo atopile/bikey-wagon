@@ -1,0 +1,4 @@
+module BikeyWagon:
+    cell_voltage = 2V to 4.2V
+    series_cells = 13
+    max_voltage = cell_voltage * series_cells

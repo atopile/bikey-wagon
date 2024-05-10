@@ -1,6 +1,25 @@
 ato-version: ^0.2.0
 builds:
   default:
-    entry: elec/src/the-wagon.ato:TheWagon
+    entry: elec/src/bikey-wagon.ato:BikeyWagon
 dependencies:
-- generics
+- name: generics
+  version_spec: '@09ad6baeaab93d53b9b6c90069ac750f4161d76f'
+  link_broken: true
+  path: elec/src/generics
+- name: nau7802
+  version_spec: '@62f6a4c6bbca2d423eabed6fb5319fcd8ff55f7c'
+  link_broken: false
+  path: .ato/modules/nau7802
+- name: esp32-s3
+  version_spec: '@775b03e7566001d5724b98a5c5d952a887bb550c'
+  link_broken: false
+  path: .ato/modules/esp32-s3
+- name: usb-connectors
+  version_spec: '@53496dede5b600bd799a0afe199eaa514ebdc5f6'
+  link_broken: false
+  path: .ato/modules/usb-connectors
+- name: xt-connectors
+  version_spec: '@3719ec970da96df05b6763671993ca2276df968b'
+  link_broken: false
+  path: .ato/modules/xt-connectors

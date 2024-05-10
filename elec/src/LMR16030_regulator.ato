@@ -1,0 +1,72 @@
+from "generics/capacitors.ato" import Capacitor
+from "generics/inductors.ato" import Inductor
+from "generics/interfaces.ato" import Pair, Power
+from "generics/regulators.ato" import AdjustableRegulator
+from "generics/resistors.ato" import Resistor
+
+
+component LMR16030SDDAR:
+    # component LMR16030SDDAR
+    footprint = "SO-8_L4.9-W3.9-P1.27-LS6.0-BL-EP"
+    lcsc_id = "C136648"
+    # pins
+    signal BOOT ~ pin 1
+    signal VIN ~ pin 2
+    signal EN ~ pin 3
+    signal RT_slash_SYNC ~ pin 4
+    signal FB ~ pin 5
+    signal SS ~ pin 6
+    signal GND ~ pin 7
+    signal SW ~ pin 8
+    signal EP ~ pin 9
+
+
+module LMR16030Buck from AdjustableRegulator:
+    """
+    This follows the configuration here:
+    https://www.ti.com/lit/ds/symlink/lmr16030.pdf#page=19
+    """
+    # Additional top-level params to configure
+    max_i_current = 3A
+    transient_response_300mA_to_3A = 5  # percent
+    output_ripple = 50mV
+    input_ripple = 400mV
+    switching_frequency = 500kHz
+
+    assert v_out < v_in < 60V
+    assert max_i_current < 3A
+
+    ic = new LMR16030SDDAR
+
+    # Power Input
+    power_in.vcc ~ ic.VIN
+    power_in.gnd ~ ic.GND
+
+    # 8.2.2.2 Output Voltage Set-Point
+    # The remainder of this is handeled in our super class
+    power_out ~ feedback_div.power
+    feedback_div.output.vcc ~ ic.FB
+
+    # 8.2.2.3 Switching Frequency
+    r_switching_frequency = new Resistor  # Rt in the datasheet
+    r_switching_frequency.value = 42904 * (switching_frequency / 1kHz)  ** -1.088
+    r_switching_frequency.package = "0402"
+
+    # 8.2.2.4 Output Inductor Selection
+    inductor = new Inductor
+    inductor_ripple_current = v_out * (v_in - v_out) / (v_in * inductor.value * switching_frequency)  # The ripple current in the inductor
+    # TODO: do we need to constrain the ripple current in some way?
+    assert inductor.value > (v_in - v_out) / (max_i_current * (0.2 to 0.4)) * v_out / (v_in * switching_frequency)
+
+    # 8.2.2.5 Output Capacitor Selection
+    c_out = new Capacitor
+    d_v_out_esr = (0.2 to 0.4) * max_i_current * c_out.esr
+
+    c_in_hf = new Capacitor
+    power_in ~ c_in_hf.power
+    c_in_hf.voltage = v_in * 2
+
+
+    c_boot = new Capacitor
+
+    a = 0

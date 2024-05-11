@@ -3,6 +3,7 @@ from "generics/inductors.ato" import Inductor
 from "generics/interfaces.ato" import Pair, Power
 from "generics/regulators.ato" import AdjustableRegulator
 from "generics/resistors.ato" import Resistor
+from "generics/diodes.ato" import SchottkyDiode
 
 
 component LMR16030SDDAR:
@@ -19,54 +20,130 @@ component LMR16030SDDAR:
     signal GND ~ pin 7
     signal SW ~ pin 8
     signal EP ~ pin 9
+    EP ~ GND  # "Must be connected to GND on PCB"
 
 
 module LMR16030Buck from AdjustableRegulator:
     """
     This follows the configuration here:
     https://www.ti.com/lit/ds/symlink/lmr16030.pdf#page=19
+
+    Usage:
+    - set v_in and v_out
+    - [optinal] set the additional "top-level" params below
+    - replace (->) the inductor and diode with the actual components
+    - set the inductor.value
+    - set the diode.voltage and diode.current
+    - set c_out value
+
     """
+
     # Additional top-level params to configure
-    max_i_current = 3A
+    max_output_current = 3A
     transient_response_300mA_to_3A = 5  # percent
     output_ripple = 50mV
     input_ripple = 400mV
-    switching_frequency = 500kHz
+    switching_frequency = 500kHz ± 10%
+    soft_start_time = 1ms to 5ms
 
     assert v_out < v_in < 60V
-    assert max_i_current < 3A
+    assert max_output_current < 3A
 
     ic = new LMR16030SDDAR
+
+    # Optional: Enable pin
+    # This is normally pulled up, so only connect
+    # to disable by pulling down
+    enable = new Pair
+    enable.io ~ ic.EN
+    enable.gnd ~ ic.GND
 
     # Power Input
     power_in.vcc ~ ic.VIN
     power_in.gnd ~ ic.GND
 
+    # 7.3.7 External Soft Start
+    c_ss = new Capacitor
+    ic.SS ~ c_ss.p1; c_ss.p2 ~ ic.GND
+    c_ss.value = soft_start_time * 3uA / 0.75V
+    # c_ss.footprint = "C0402"
+
     # 8.2.2.2 Output Voltage Set-Point
     # The remainder of this is handeled in our super class
     power_out ~ feedback_div.power
     feedback_div.output.vcc ~ ic.FB
+    v_ref = 0.75V
 
     # 8.2.2.3 Switching Frequency
     r_switching_frequency = new Resistor  # Rt in the datasheet
-    r_switching_frequency.value = 42904 * (switching_frequency / 1kHz)  ** -1.088
-    r_switching_frequency.package = "0402"
+    ic.RT_slash_SYNC ~ r_switching_frequency.p1; r_switching_frequency.p2 ~ ic.GND
+    # Use an assertion here rather than an assignment in case we replace the resistor elsewhere
+    assert r_switching_frequency.value within (42904 * (switching_frequency / 1kHz)  ** -1.088) * 1kΩ
+    r_switching_frequency.footprint = "C0402"
 
     # 8.2.2.4 Output Inductor Selection
     inductor = new Inductor
+    ic.SW ~ inductor.p1; inductor.p2 ~ power_out.vcc
     inductor_ripple_current = v_out * (v_in - v_out) / (v_in * inductor.value * switching_frequency)  # The ripple current in the inductor
+    k_ind = inductor_ripple_current / max_output_current
+    assert k_ind within 0.2 to 0.4
     # TODO: do we need to constrain the ripple current in some way?
-    assert inductor.value > (v_in - v_out) / (max_i_current * (0.2 to 0.4)) * v_out / (v_in * switching_frequency)
+    assert inductor.value > (v_in - v_out) / (max_output_current * k_ind) * v_out / (v_in * switching_frequency)
 
     # 8.2.2.5 Output Capacitor Selection
     c_out = new Capacitor
-    d_v_out_esr = (0.2 to 0.4) * max_i_current * c_out.esr
+    power_out ~ c_out.power
+    d_v_out_esr = inductor_ripple_current * c_out.esr
+    d_v_out_c = inductor_ripple_current / (8 * c_out.value * switching_frequency)
+
+    assert d_v_out_esr + d_v_out_c < output_ripple
+    # Since the above is generally a conservative case, we're
+    # ignoring the step change sizing case
+
+    # 8.2.2.6 Schottky Diode Selection
+    diode = new SchottkyDiode
+    ic.SW ~ diode.cathode; diode.anode ~ power_in.gnd
+    assert diode.voltage > v_in * 1.25  # 25% higher than max input voltage
+    assert diode.current > max_output_current
+
+    # 8.2.2.7 Input Capacitor Selection
+    c_in_bulk = new Capacitor
+    power_in ~ c_in_bulk.power
+    c_in_bulk.value = 4.7uF to 10uF
+    c_in_bulk.voltage = v_in * 2
+    c_in_bulk.dielectric = "X7R"
+    c_in_bulk.footprint = "C01005"
 
     c_in_hf = new Capacitor
     power_in ~ c_in_hf.power
+    c_in_hf.value = 100nF +/- 21%
     c_in_hf.voltage = v_in * 2
+    c_in_hf.footprint = "C01005"
+    c_in_hf.dielectric = "X7R"
 
-
+    # 8.2.2.8 Bootstrap Capacitor Selection
     c_boot = new Capacitor
+    ic.SW ~ c_boot.p1; c_boot.p2 ~ ic.BOOT
+    c_boot.value = 100nF +/- 21%
+    c_boot.voltage = 16V
+    c_boot.dielectric = "X7R"
+    c_boot.footprint = "C0603"
 
-    a = 0
+
+module LMR16030BuckDemo from LMR16030Buck:
+    """
+    FIXME: this isn't working yet, because
+    of component server errors
+    """
+    v_in = 40V to 60V
+    v_out = 3.3V +/- 100mV
+
+    inductor.value = 4.7uH
+    inductor.mpn = "dummy"
+
+    diode.voltage = 60V
+    diode.current = 3A
+    diode.mpn = "dummy"
+
+    c_out.value = 22uF +/- 25%
+    c_out.mpn = "dummy"

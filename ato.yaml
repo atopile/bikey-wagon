@@ -1,7 +1,22 @@
-ato-version: ^0.2.0
+ato-version: ^0.2.51
 builds:
   default:
     entry: elec/src/bikey-wagon.ato:BikeyWagon
+  lmr16030buck:  # Here for layout reuse
+    entry: elec/src/LMR16030_regulator.ato:LMR16030Buck
+    dont_solve_equations: true
+    exclude_targets:
+      # - layout-module-map  # This is the only one we're still building
+      - copy-footprints
+      - copy-3dmodels
+      - netlist
+      - bom
+      - designator-map
+      - clone-footprints
+      - assertions-report
+      - variable-report
+  lmr16030buck-demo:  # Here as a development board
+    entry: elec/src/LMR16030_regulator.ato:LMR16030BuckDemo
 dependencies:
 - name: generics
   version_spec: '@09ad6baeaab93d53b9b6c90069ac750f4161d76f'

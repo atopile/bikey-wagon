@@ -11,12 +11,20 @@ component Capacitor:
     power.vcc ~ p1
     power.gnd ~ p2
 
+    value: capacitance
+    esr: resistance
+    voltage: voltage
+
 component CapacitorElectrolytic:
-    signal anode ~ pin 1
-    signal cathode ~ pin 2
+    signal anode
+    signal cathode
     designator_prefix = "C"
     mpn = "generic_capacitor"
 
     power = new Power
     power.vcc ~ anode
     power.gnd ~ cathode
+
+    value: capacitance
+    esr: resistance
+    voltage: voltage

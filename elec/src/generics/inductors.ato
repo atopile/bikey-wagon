@@ -4,3 +4,6 @@ component Inductor:
     designator_prefix = "L"
     mpn = "generic_inductor"
     type = "inductor"
+
+    rated_current: current
+    value: inductance

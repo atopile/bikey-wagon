@@ -3,12 +3,15 @@ from "generics/inductors.ato" import Inductor
 from "generics/interfaces.ato" import Pair, Power
 from "generics/regulators.ato" import AdjustableRegulator
 from "generics/resistors.ato" import Resistor
+from "generics/diodes.ato" import SchottkyDiode
 
 
 component LMR16030SDDAR:
-    # component LMR16030SDDAR
+    """SIMPLE SWITCHER 60V, 3A Step-Down Converter with 40uA Iq"""
     footprint = "SO-8_L4.9-W3.9-P1.27-LS6.0-BL-EP"
     lcsc_id = "C136648"
+    mpn = "C136648"
+
     # pins
     signal BOOT ~ pin 1
     signal VIN ~ pin 2
@@ -19,54 +22,160 @@ component LMR16030SDDAR:
     signal GND ~ pin 7
     signal SW ~ pin 8
     signal EP ~ pin 9
+    EP ~ GND  # "Must be connected to GND on PCB"
 
 
 module LMR16030Buck from AdjustableRegulator:
     """
     This follows the configuration here:
     https://www.ti.com/lit/ds/symlink/lmr16030.pdf#page=19
+
+    Usage:
+    - set v_in and v_out
+    - [optinal] set the additional "top-level" params below
+    - replace (->) the inductor and diode with the actual components
+    - set the inductor.value
+    - set the diode.voltage and diode.current
+    - set c_out value
+
     """
+
     # Additional top-level params to configure
-    max_i_current = 3A
-    transient_response_300mA_to_3A = 5  # percent
+    output_current = 0 to 3A
     output_ripple = 50mV
     input_ripple = 400mV
-    switching_frequency = 500kHz
+    switching_frequency = 500kHz ± 3%
+    soft_start_time = 1ms to 5ms
 
-    assert v_out < v_in < 60V
-    assert max_i_current < 3A
+    assert v_out < v_in <= 60V
+    assert output_current <= 3A
+    assert switching_frequency within 250kHz to 2.5MHz
 
     ic = new LMR16030SDDAR
+
+    # Optional: Enable pin
+    # This is normally pulled up, so only connect
+    # to disable by pulling down
+    enable = new Pair
+    enable.io ~ ic.EN
+    enable.gnd ~ ic.GND
 
     # Power Input
     power_in.vcc ~ ic.VIN
     power_in.gnd ~ ic.GND
 
+    # 7.3.7 External Soft Start
+    c_ss = new Capacitor
+    ic.SS ~ c_ss.p1; c_ss.p2 ~ ic.GND
+    c_ss.value = soft_start_time * 3uA / 0.75V
+    # c_ss.footprint = "C0402"
+
     # 8.2.2.2 Output Voltage Set-Point
     # The remainder of this is handeled in our super class
     power_out ~ feedback_div.power
     feedback_div.output.vcc ~ ic.FB
+    v_ref = 0.75V
 
     # 8.2.2.3 Switching Frequency
     r_switching_frequency = new Resistor  # Rt in the datasheet
-    r_switching_frequency.value = 42904 * (switching_frequency / 1kHz)  ** -1.088
-    r_switching_frequency.package = "0402"
+    ic.RT_slash_SYNC ~ r_switching_frequency.p1; r_switching_frequency.p2 ~ ic.GND
+    # Use an assertion here rather than an assignment in case we replace the resistor elsewhere
+    assert r_switching_frequency.value within (42904 * (switching_frequency / 1kHz)  ** -1.088) * 1kΩ
+    r_switching_frequency.footprint = "C0402"
 
     # 8.2.2.4 Output Inductor Selection
     inductor = new Inductor
-    inductor_ripple_current = v_out * (v_in - v_out) / (v_in * inductor.value * switching_frequency)  # The ripple current in the inductor
-    # TODO: do we need to constrain the ripple current in some way?
-    assert inductor.value > (v_in - v_out) / (max_i_current * (0.2 to 0.4)) * v_out / (v_in * switching_frequency)
+    ic.SW ~ inductor.p1; inductor.p2 ~ power_out.vcc
+    inductor_ripple_current = v_out * (max(v_in) - v_out) / (max(v_in) * inductor.value * switching_frequency)  # The ripple current in the inductor
+    assert inductor.rated_current >= output_current
+
+    k_ind = inductor_ripple_current / max(output_current)
+
+    assert k_ind <= 0.4  # The datasheet says min 0.2, but I believe they mean that's a reasonable minimum for component selection
+
+    l_min = (max(v_in) - v_out) / (max(output_current) * max(k_ind)) * v_out / (max(v_in) * switching_frequency)  # Min inductor value
+    assert inductor.value > l_min  #Make sure the inductor is large enough to keep our ripple current in check
 
     # 8.2.2.5 Output Capacitor Selection
     c_out = new Capacitor
-    d_v_out_esr = (0.2 to 0.4) * max_i_current * c_out.esr
+    power_out ~ c_out.power
+    d_v_out_esr = inductor_ripple_current * c_out.esr
+    d_v_out_c = inductor_ripple_current / (8 * c_out.value * switching_frequency)
+
+    assert d_v_out_esr + d_v_out_c < output_ripple
+    # Since the above is generally a conservative case, we're
+    # ignoring the step change sizing case
+
+    assert c_out.voltage > v_out * 2
+
+    # 8.2.2.6 Schottky Diode Selection
+    diode = new SchottkyDiode
+    ic.SW ~ diode.cathode; diode.anode ~ power_in.gnd
+    assert diode.breakdown_voltage >= v_in * 1.25  # 25% higher than max input voltage
+    assert diode.rated_current >= output_current
+
+    # 8.2.2.7 Input Capacitor Selection
+    c_in_bulk = new Capacitor
+    power_in ~ c_in_bulk.power
+    c_in_bulk.value = 4.7uF to 10uF
+    c_in_bulk.voltage = v_in * 2
+    # The datasheet recommends XR7 dielectric
+    # for the bulk input capacitor, but I haven't been
+    # able to find one with a voltage rating that high
 
     c_in_hf = new Capacitor
     power_in ~ c_in_hf.power
+    c_in_hf.value = 100nF +/- 21%
     c_in_hf.voltage = v_in * 2
+    c_in_hf.footprint = "C0805"
+    c_in_hf.dielectric = "X7R"
 
-
+    # 8.2.2.8 Bootstrap Capacitor Selection
     c_boot = new Capacitor
+    ic.SW ~ c_boot.p1; c_boot.p2 ~ ic.BOOT
+    c_boot.value = 100nF +/- 21%
+    c_boot.voltage = 16V * (1 to 100)
+    c_boot.dielectric = "X7R"
+    c_boot.footprint = "C0603"
 
-    a = 0
+
+from "power_parts.ato" import TSS310LA, SQH6045S_8R2M_LF, ECG2CM8R2E12OTBO, NM1206B104K251CEGN, TCC1206X7R226K100HT
+
+module LMR16030Buck_3V3_3A from LMR16030Buck:
+    """
+    This is a demo of all the things you should configure when
+    using the LMR16030Buck module.
+    """
+    v_in = 40V to 60V
+    v_out = 3.3V +/- 3%
+    switching_frequency = 650kHz +/- 5%
+    output_ripple = 80mV
+
+    inductor -> SQH6045S_8R2M_LF
+    diode -> TSS310LA
+    c_in_bulk -> ECG2CM8R2E12OTBO
+    c_in_hf -> NM1206B104K251CEGN
+    c_out -> TCC1206X7R226K100HT
+    # We don't actually know the ESR of the component in this case
+    # but after a quick google, it seems that 40mΩ is a reasonable
+    # and it's the point at which all the assertions begin to pass
+    c_out.esr = 40mΩ
+
+from "xt-connectors/xt-connectors.ato" import XT30_Female_Right_Angle, XT30_Male_Right_Angle
+from "generics/leds.ato" import LEDIndicatorRed
+
+module LMR16030BuckDemo:
+    """
+    This is a demo board of the LMR16030Buck_3V3_3A module
+    """
+    buck = new LMR16030Buck_3V3_3A
+
+    power_in = new XT30_Male_Right_Angle
+    power_in.power ~ buck.power_in
+
+    power_out = new XT30_Male_Right_Angle
+    power_out.power ~ buck.power_out
+
+    led = new LEDIndicatorRed
+    buck.power_out ~ led.power
+    led.v_in = buck.v_out

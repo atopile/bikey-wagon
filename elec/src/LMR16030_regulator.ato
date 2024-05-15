@@ -39,15 +39,15 @@ module LMR16030Buck from AdjustableRegulator:
     """
 
     # Additional top-level params to configure
-    max_output_current = 3A
-    transient_response_300mA_to_3A = 5  # percent
+    output_current = 0 to 3A
     output_ripple = 50mV
     input_ripple = 400mV
-    switching_frequency = 500kHz ± 10%
+    switching_frequency = 500kHz ± 3%
     soft_start_time = 1ms to 5ms
 
-    assert v_out < v_in < 60V
-    assert max_output_current < 3A
+    assert v_out < v_in <= 60V
+    assert output_current <= 3A
+    assert switching_frequency within 250kHz to 2.5MHz
 
     ic = new LMR16030SDDAR
 
@@ -84,11 +84,14 @@ module LMR16030Buck from AdjustableRegulator:
     # 8.2.2.4 Output Inductor Selection
     inductor = new Inductor
     ic.SW ~ inductor.p1; inductor.p2 ~ power_out.vcc
-    inductor_ripple_current = v_out * (v_in - v_out) / (v_in * inductor.value * switching_frequency)  # The ripple current in the inductor
-    k_ind = inductor_ripple_current / max_output_current
-    assert k_ind within 0.2 to 0.4
-    # TODO: do we need to constrain the ripple current in some way?
-    assert inductor.value > (v_in - v_out) / (max_output_current * k_ind) * v_out / (v_in * switching_frequency)
+    inductor_ripple_current = v_out * (max(v_in) - v_out) / (max(v_in) * inductor.value * switching_frequency)  # The ripple current in the inductor
+
+    k_ind = inductor_ripple_current / max(output_current)
+
+    assert k_ind <= 0.4  # The datasheet says min 0.2, but I believe they mean that's a reasonable minimum for component selection
+
+    l_min = (max(v_in) - v_out) / (max(output_current) * max(k_ind)) * v_out / (max(v_in) * switching_frequency)  # Min inductor value
+    assert inductor.value > l_min  #Make sure the inductor is large enough to keep our ripple current in check
 
     # 8.2.2.5 Output Capacitor Selection
     c_out = new Capacitor
@@ -103,8 +106,8 @@ module LMR16030Buck from AdjustableRegulator:
     # 8.2.2.6 Schottky Diode Selection
     diode = new SchottkyDiode
     ic.SW ~ diode.cathode; diode.anode ~ power_in.gnd
-    assert diode.voltage > v_in * 1.25  # 25% higher than max input voltage
-    assert diode.current > max_output_current
+    assert diode.breakdown_voltage >= v_in * 1.25  # 25% higher than max input voltage
+    assert diode.current >= output_current
 
     # 8.2.2.7 Input Capacitor Selection
     c_in_bulk = new Capacitor
@@ -112,38 +115,43 @@ module LMR16030Buck from AdjustableRegulator:
     c_in_bulk.value = 4.7uF to 10uF
     c_in_bulk.voltage = v_in * 2
     c_in_bulk.dielectric = "X7R"
-    c_in_bulk.footprint = "C01005"
+    c_in_bulk.footprint = "C0805"
 
     c_in_hf = new Capacitor
     power_in ~ c_in_hf.power
     c_in_hf.value = 100nF +/- 21%
     c_in_hf.voltage = v_in * 2
-    c_in_hf.footprint = "C01005"
+    c_in_hf.footprint = "C0805"
     c_in_hf.dielectric = "X7R"
 
     # 8.2.2.8 Bootstrap Capacitor Selection
     c_boot = new Capacitor
     ic.SW ~ c_boot.p1; c_boot.p2 ~ ic.BOOT
     c_boot.value = 100nF +/- 21%
-    c_boot.voltage = 16V
+    c_boot.voltage = 16V * (1 to 100)
     c_boot.dielectric = "X7R"
     c_boot.footprint = "C0603"
 
 
 module LMR16030BuckDemo from LMR16030Buck:
     """
-    FIXME: this isn't working yet, because
-    of component server errors
+    This is a demo of all the things you should configure when
+    using the LMR16030Buck module.
     """
     v_in = 40V to 60V
-    v_out = 3.3V +/- 100mV
+    v_out = 12V +/- 3%
+    switching_frequency = 650kHz +/- 5%
+    output_ripple = 80mV
 
-    inductor.value = 4.7uH
-    inductor.mpn = "dummy"
+    inductor.value = 25.2uH +/- 20%
 
-    diode.voltage = 60V
+    diode.breakdown_voltage = 80V
     diode.current = 3A
-    diode.mpn = "dummy"
 
     c_out.value = 22uF +/- 25%
-    c_out.mpn = "dummy"
+    c_out.esr = 40mΩ
+
+    # These are just to stop the component server from
+    # searching for these components
+    diode.mpn = ""
+    inductor.mpn = ""

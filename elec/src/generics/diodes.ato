@@ -4,6 +4,9 @@ component Diode:
     designator_prefix = "D"
     mpn = "generic_diode"
 
+    breakdown_voltage: voltage
+    rated_current: current
+
 component ZenerDiode from Diode:
     designator_prefix = "DZ"
     category = "zener"

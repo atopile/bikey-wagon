@@ -1,2 +1,438 @@
 (kicad_symbol_lib
+  (symbol "LM5002MA_NOPB"
+    (in_bom yes)
+    (on_board yes)
+    (property
+      "Reference"
+      "U"
+      (id 0)
+      (at 0 12.70 0)
+      (effects (font (size 1.27 1.27) ) )
+    )
+    (property
+      "Value"
+      "LM5002MA/NOPB"
+      (id 1)
+      (at 0 -12.70 0)
+      (effects (font (size 1.27 1.27) ) )
+    )
+    (property
+      "Footprint"
+      "footprints:SOIC-8_L4.9-W3.9-P1.27-LS6.0-BL"
+      (id 2)
+      (at 0 -15.24 0)
+      (effects (font (size 1.27 1.27) ) hide)
+    )
+    (property
+      "Datasheet"
+      "https://lcsc.com/product-detail/DC-DC-Converters_TI_LM5002MA-NOPB_LM5002MA-NOPB_C115125.html"
+      (id 3)
+      (at 0 -17.78 0)
+      (effects (font (size 1.27 1.27) ) hide)
+    )
+    (property
+      "LCSC Part"
+      "C115125"
+      (id 5)
+      (at 0 -20.32 0)
+      (effects (font (size 1.27 1.27) ) hide)
+    )
+    (symbol "LM5002MA_NOPB_0_1"
+      (rectangle
+        (start -7.62 10.16)
+        (end 7.62 -10.16)
+        (stroke (width 0) (type default) (color 0 0 0 0))
+        (fill (type background))
+      )
+      (pin output line
+        (at 12.70 2.54 180)
+        (length 5.08)
+        (name "COMP" (effects (font (size 1.27 1.27))))
+        (number "7" (effects (font (size 1.27 1.27))))
+      )
+      (pin power_in line
+        (at -12.70 -7.62 0)
+        (length 5.08)
+        (name "VCC" (effects (font (size 1.27 1.27))))
+        (number "3" (effects (font (size 1.27 1.27))))
+      )
+      (pin power_in line
+        (at 12.70 7.62 180)
+        (length 5.08)
+        (name "SW" (effects (font (size 1.27 1.27))))
+        (number "1" (effects (font (size 1.27 1.27))))
+      )
+      (pin unspecified line
+        (at -12.70 -2.54 0)
+        (length 5.08)
+        (name "RT" (effects (font (size 1.27 1.27))))
+        (number "5" (effects (font (size 1.27 1.27))))
+      )
+      (pin power_in line
+        (at 12.70 -7.62 180)
+        (length 5.08)
+        (name "GND" (effects (font (size 1.27 1.27))))
+        (number "4" (effects (font (size 1.27 1.27))))
+      )
+      (pin unspecified line
+        (at -12.70 2.54 0)
+        (length 5.08)
+        (name "EN" (effects (font (size 1.27 1.27))))
+        (number "8" (effects (font (size 1.27 1.27))))
+      )
+      (pin power_in line
+        (at -12.70 7.62 0)
+        (length 5.08)
+        (name "VIN" (effects (font (size 1.27 1.27))))
+        (number "2" (effects (font (size 1.27 1.27))))
+      )
+      (pin unspecified line
+        (at 12.70 -2.54 180)
+        (length 5.08)
+        (name "FB" (effects (font (size 1.27 1.27))))
+        (number "6" (effects (font (size 1.27 1.27))))
+      )
+    )
+  )
+  (symbol "LMR16030SDDAR"
+    (in_bom yes)
+    (on_board yes)
+    (property
+      "Reference"
+      "U"
+      (id 0)
+      (at 0 10.16 0)
+      (effects (font (size 1.27 1.27) ) )
+    )
+    (property
+      "Value"
+      "LMR16030SDDAR"
+      (id 1)
+      (at 0 -10.16 0)
+      (effects (font (size 1.27 1.27) ) )
+    )
+    (property
+      "Footprint"
+      "footprints:SO-8_L4.9-W3.9-P1.27-LS6.0-BL-EP"
+      (id 2)
+      (at 0 -12.70 0)
+      (effects (font (size 1.27 1.27) ) hide)
+    )
+    (property
+      "Datasheet"
+      "https://lcsc.com/product-detail/DC-DC-Converters_TI-Tex-as-Instruments_LMR16030SDDAR_TI-Tex-as-Instruments-TI-LMR16030SDDAR_C136648.html"
+      (id 3)
+      (at 0 -15.24 0)
+      (effects (font (size 1.27 1.27) ) hide)
+    )
+    (property
+      "LCSC Part"
+      "C136648"
+      (id 5)
+      (at 0 -17.78 0)
+      (effects (font (size 1.27 1.27) ) hide)
+    )
+    (symbol "LMR16030SDDAR_0_1"
+      (rectangle
+        (start -15.24 7.62)
+        (end 15.24 -7.62)
+        (stroke (width 0) (type default) (color 0 0 0 0))
+        (fill (type background))
+      )
+      (circle
+        (center -13.97 6.35)
+        (radius 0.38)
+        (stroke (width 0) (type default) (color 0 0 0 0))
+        (fill (type none))
+      )
+      (pin unspecified line
+        (at -17.78 2.54 0)
+        (length 2.54)
+        (name "BOOT" (effects (font (size 1.27 1.27))))
+        (number "1" (effects (font (size 1.27 1.27))))
+      )
+      (pin unspecified line
+        (at -17.78 -0.00 0)
+        (length 2.54)
+        (name "VIN" (effects (font (size 1.27 1.27))))
+        (number "2" (effects (font (size 1.27 1.27))))
+      )
+      (pin unspecified line
+        (at -17.78 -2.54 0)
+        (length 2.54)
+        (name "EN" (effects (font (size 1.27 1.27))))
+        (number "3" (effects (font (size 1.27 1.27))))
+      )
+      (pin unspecified line
+        (at -17.78 -5.08 0)
+        (length 2.54)
+        (name "RT/SYNC" (effects (font (size 1.27 1.27))))
+        (number "4" (effects (font (size 1.27 1.27))))
+      )
+      (pin unspecified line
+        (at 17.78 -5.08 180)
+        (length 2.54)
+        (name "FB" (effects (font (size 1.27 1.27))))
+        (number "5" (effects (font (size 1.27 1.27))))
+      )
+      (pin unspecified line
+        (at 17.78 -2.54 180)
+        (length 2.54)
+        (name "SSorPGOOD" (effects (font (size 1.27 1.27))))
+        (number "6" (effects (font (size 1.27 1.27))))
+      )
+      (pin unspecified line
+        (at 17.78 -0.00 180)
+        (length 2.54)
+        (name "GND" (effects (font (size 1.27 1.27))))
+        (number "7" (effects (font (size 1.27 1.27))))
+      )
+      (pin unspecified line
+        (at 17.78 2.54 180)
+        (length 2.54)
+        (name "SW" (effects (font (size 1.27 1.27))))
+        (number "8" (effects (font (size 1.27 1.27))))
+      )
+      (pin unspecified line
+        (at 17.78 5.08 180)
+        (length 2.54)
+        (name "EP" (effects (font (size 1.27 1.27))))
+        (number "9" (effects (font (size 1.27 1.27))))
+      )
+    )
+  )
+  (symbol "SQH6045S-8R2M-LF"
+    (in_bom yes)
+    (on_board yes)
+    (property
+      "Reference"
+      "L"
+      (id 0)
+      (at 0 5.08 0)
+      (effects (font (size 1.27 1.27) ) )
+    )
+    (property
+      "Value"
+      "SQH6045S-8R2M-LF"
+      (id 1)
+      (at 0 -5.08 0)
+      (effects (font (size 1.27 1.27) ) )
+    )
+    (property
+      "Footprint"
+      "footprints:IND-SMD_L6.2-W6.2"
+      (id 2)
+      (at 0 -7.62 0)
+      (effects (font (size 1.27 1.27) ) hide)
+    )
+    (property
+      "Datasheet"
+      "https://lcsc.com/product-detail/Others_Coilmaster-Elec-SQH6045S-8R2M-LF_C257256.html"
+      (id 3)
+      (at 0 -10.16 0)
+      (effects (font (size 1.27 1.27) ) hide)
+    )
+    (property
+      "LCSC Part"
+      "C257256"
+      (id 5)
+      (at 0 -12.70 0)
+      (effects (font (size 1.27 1.27) ) hide)
+    )
+    (symbol "SQH6045S-8R2M-LF_0_1"
+      (arc
+        (start -4.06 -0.03)
+        (mid -2.44 -0.93)
+        (end -2.04 -0.02)
+        (stroke (width 0) (type default) (color 0 0 0 0))
+        (fill (type none))
+      )
+      (arc
+        (start -2.04 -0.03)
+        (mid -0.56 -1.03)
+        (end -0.01 -0.03)
+        (stroke (width 0) (type default) (color 0 0 0 0))
+        (fill (type none))
+      )
+      (arc
+        (start 0.02 -0.03)
+        (mid 1.49 -1.03)
+        (end 2.04 -0.03)
+        (stroke (width 0) (type default) (color 0 0 0 0))
+        (fill (type none))
+      )
+      (arc
+        (start 2.07 -0.04)
+        (mid 3.44 -1.05)
+        (end 4.06 -0.03)
+        (stroke (width 0) (type default) (color 0 0 0 0))
+        (fill (type none))
+      )
+      (pin unspecified line
+        (at 5.08 -0.00 180)
+        (length 1.016)
+        (name "2" (effects (font (size 1.27 1.27))))
+        (number "2" (effects (font (size 1.27 1.27))))
+      )
+      (pin unspecified line
+        (at -5.08 -0.00 0)
+        (length 1.016)
+        (name "1" (effects (font (size 1.27 1.27))))
+        (number "1" (effects (font (size 1.27 1.27))))
+      )
+    )
+  )
+  (symbol "SMAJ13A-13-F"
+    (in_bom yes)
+    (on_board yes)
+    (property
+      "Reference"
+      "D"
+      (id 0)
+      (at 0 5.08 0)
+      (effects (font (size 1.27 1.27) ) )
+    )
+    (property
+      "Value"
+      "SMAJ13A-13-F"
+      (id 1)
+      (at 0 -5.08 0)
+      (effects (font (size 1.27 1.27) ) )
+    )
+    (property
+      "Footprint"
+      "footprints:SMA_L4.4-W2.6-LS5.0-RD"
+      (id 2)
+      (at 0 -7.62 0)
+      (effects (font (size 1.27 1.27) ) hide)
+    )
+    (property
+      "Datasheet"
+      "https://lcsc.com/product-detail/TVS_DIODES_SMAJ13A-13-F_SMAJ13A-13-F_C110519.html"
+      (id 3)
+      (at 0 -10.16 0)
+      (effects (font (size 1.27 1.27) ) hide)
+    )
+    (property
+      "LCSC Part"
+      "C110519"
+      (id 5)
+      (at 0 -12.70 0)
+      (effects (font (size 1.27 1.27) ) hide)
+    )
+    (symbol "SMAJ13A-13-F_0_1"
+      (polyline
+        (pts
+          (xy 1.27 1.52) (xy -1.27 -0.00) (xy 1.27 -1.78) (xy 1.27 1.52)
+        )
+        (stroke (width 0) (type default) (color 0 0 0 0))
+        (fill (type background))
+      )
+      (polyline
+        (pts
+          (xy -2.03 1.52) (xy -2.03 1.78) (xy -1.52 1.78) (xy -1.52 -2.03) (xy -1.02 -2.03) (xy -1.02 -1.78)
+        )
+        (stroke (width 0) (type default) (color 0 0 0 0))
+        (fill (type none))
+      )
+      (pin unspecified line
+        (at 5.08 -0.00 180)
+        (length 3.81)
+        (name "A" (effects (font (size 1.27 1.27))))
+        (number "2" (effects (font (size 1.27 1.27))))
+      )
+      (pin unspecified line
+        (at -5.08 -0.00 0)
+        (length 3.81)
+        (name "K" (effects (font (size 1.27 1.27))))
+        (number "1" (effects (font (size 1.27 1.27))))
+      )
+    )
+  )
+  (symbol "ECG2CM8R2E12OTBO"
+    (in_bom yes)
+    (on_board yes)
+    (property
+      "Reference"
+      "C"
+      (id 0)
+      (at 0 10.16 0)
+      (effects (font (size 1.27 1.27) ) )
+    )
+    (property
+      "Value"
+      "ECG2CM8R2E12OTBO"
+      (id 1)
+      (at 0 -10.16 0)
+      (effects (font (size 1.27 1.27) ) )
+    )
+    (property
+      "Footprint"
+      "footprints:CAP-TH_BD6.3-P2.50-D1.0-FD"
+      (id 2)
+      (at 0 -12.70 0)
+      (effects (font (size 1.27 1.27) ) hide)
+    )
+    (property
+      "Datasheet"
+      "https://lcsc.com/product-detail/Aluminum-Electrolytic-Capacitors-Leaded_Yunxing-ECG2CM8R2E12OTBO_C525472.html"
+      (id 3)
+      (at 0 -15.24 0)
+      (effects (font (size 1.27 1.27) ) hide)
+    )
+    (property
+      "LCSC Part"
+      "C525472"
+      (id 5)
+      (at 0 -17.78 0)
+      (effects (font (size 1.27 1.27) ) hide)
+    )
+    (symbol "ECG2CM8R2E12OTBO_0_1"
+      (rectangle
+        (start -2.54 1.52)
+        (end -1.52 1.52)
+        (stroke (width 0) (type default) (color 0 0 0 0))
+        (fill (type background))
+      )
+      (rectangle
+        (start -2.03 2.03)
+        (end -2.03 1.02)
+        (stroke (width 0) (type default) (color 0 0 0 0))
+        (fill (type background))
+      )
+      (arc
+        (start 0.00 -0.25)
+        (mid 4.23 -4.70)
+        (end 2.54 -1.02)
+        (stroke (width 0) (type default) (color 0 0 0 0))
+        (fill (type none))
+      )
+      (arc
+        (start -2.54 -1.02)
+        (mid 3.94 -3.72)
+        (end 0.00 -0.25)
+        (stroke (width 0) (type default) (color 0 0 0 0))
+        (fill (type none))
+      )
+      (polyline
+        (pts
+          (xy -2.54 0.76) (xy 2.54 0.76)
+        )
+        (stroke (width 0) (type default) (color 0 0 0 0))
+        (fill (type none))
+      )
+      (pin unspecified line
+        (at 0.00 5.08 90)
+        (length 4.318)
+        (name "1" (effects (font (size 1.27 1.27))))
+        (number "1" (effects (font (size 1.27 1.27))))
+      )
+      (pin unspecified line
+        (at 0.00 -5.08 270)
+        (length 4.826)
+        (name "2" (effects (font (size 1.27 1.27))))
+        (number "2" (effects (font (size 1.27 1.27))))
+      )
+    )
+  )
 )

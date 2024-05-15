@@ -1,0 +1,64 @@
+from "generics/inductors.ato" import Inductor
+from "generics/diodes.ato" import SchottkyDiode
+from "generics/capacitors.ato" import CapacitorElectrolytic, Capacitor
+
+component SQH6045S_8R2M_LF from Inductor:
+    """3.1A 8.2uH ±20% SMD Power Inductors ROHS"""
+
+    footprint = "IND-SMD_L6.2-W6.2"
+    lcsc_id = "C257256"
+    mpn = "C257256"
+
+    value = 8.2uH +/- 20%
+    rated_current = 3.1A
+
+
+component TSS310LA from SchottkyDiode:
+    """3A 100V Schottky Diode"""
+    footprint = "SMA_L4.4-W2.6-LS5.0-RD"
+    lcsc_id = "C2917894"
+    mpn = "C2917894"
+
+    # pins
+    anode ~ pin 2
+    cathode ~ pin 1
+
+    # electrical properties
+    breakdown_voltage = 100V
+    rated_current = 3A
+
+
+component ECG2CM8R2E12OTBO from CapacitorElectrolytic:
+    """8.2uF 160V ±20% Plugin,D6.3xL12mm Aluminum Electrolytic Capacitors - Leaded ROHS"""
+    footprint = "CAP-TH_BD6.3-P2.50-D1.0-FD"
+    lcsc_id = "C525472"
+    mpn = "C525472"
+
+    # pins
+    pin 1 ~ power.vcc
+    pin 2 ~ power.gnd
+
+    value = 8.2uF +/- 20%
+    voltage = 160V
+
+
+component NM1206B104K251CEGN from Capacitor:
+    """250V 100nF X7R ±10% 1206 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"""
+    footprint = "C1206"
+    lcsc_id = "C710467"
+    mpn = "C710467"
+
+    value = 100nF +/- 10%
+    voltage = 250V
+    dialectric = "X7R"
+
+
+component TCC1206X7R226K100HT from Capacitor:
+    """25V 22uF X5R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"""
+    footprint = "C0805"
+    lcsc_id = "C45783"
+    mpn = "C45783"
+
+    value = 22uF +/- 20%
+    voltage = 25V
+    dialectric = "X5R"

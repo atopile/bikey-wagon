@@ -1,4 +1,42 @@
+from "LMR16030_regulator.ato" import LMR16030Buck_3V3_3A
+from "generics/filters.ato" import LowPassFilter
+
 module BikeyWagon:
     cell_voltage = 2V to 4.2V
     series_cells = 13
     max_voltage = cell_voltage * series_cells
+
+    motor_power = 750W
+    motor_current = motor_power / max_voltage
+
+    max_speed = 40kph
+    wheel_diameter = 16inch to 700mm
+    wheel_circumference = wheel_diameter * 3.1459
+    max_wheel_speed = max_speed / wheel_circumference
+
+    motor_pole_pairs = 6 to 20
+    motor_electrical_speed = max_wheel_speed * motor_pole_pairs
+
+    demo_hall_lpf = new LowPassFilter
+    demo_hall_lpf.cutoff_frequency = (10 to 15) * max(motor_electrical_speed)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    a=0

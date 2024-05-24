@@ -37,6 +37,8 @@ module LMR16030Buck from AdjustableRegulator:
     - set the inductor.value
     - set the diode.voltage and diode.current
     - set c_out value
+    - replace c_in_bulk and c_in_hf with actual components,
+        which should be 2x the voltage of v_in
 
     """
 
@@ -49,7 +51,7 @@ module LMR16030Buck from AdjustableRegulator:
 
     assert v_out < v_in <= 60V
     assert output_current <= 3A
-    assert switching_frequency within 250kHz to 2.5MHz
+    assert switching_frequency within 200kHz to 2.5MHz
 
     ic = new LMR16030SDDAR
 
@@ -94,7 +96,7 @@ module LMR16030Buck from AdjustableRegulator:
     assert k_ind <= 0.4  # The datasheet says min 0.2, but I believe they mean that's a reasonable minimum for component selection
 
     l_min = (max(v_in) - v_out) / (max(output_current) * max(k_ind)) * v_out / (max(v_in) * switching_frequency)  # Min inductor value
-    assert inductor.value > l_min  #Make sure the inductor is large enough to keep our ripple current in check
+    assert inductor.value >= l_min  #Make sure the inductor is large enough to keep our ripple current in check
 
     # 8.2.2.5 Output Capacitor Selection
     c_out = new Capacitor
@@ -117,26 +119,23 @@ module LMR16030Buck from AdjustableRegulator:
     # 8.2.2.7 Input Capacitor Selection
     c_in_bulk = new Capacitor
     power_in ~ c_in_bulk.power
-    c_in_bulk.value = 4.7uF to 10uF
-    c_in_bulk.voltage = v_in * 2
+    assert c_in_bulk.value >= 4.7uF
+    assert c_in_bulk.voltage >= v_in * 2
     # The datasheet recommends XR7 dielectric
     # for the bulk input capacitor, but I haven't been
     # able to find one with a voltage rating that high
 
     c_in_hf = new Capacitor
     power_in ~ c_in_hf.power
-    c_in_hf.value = 100nF +/- 21%
-    c_in_hf.voltage = v_in * 2
-    c_in_hf.footprint = "C0805"
-    c_in_hf.dielectric = "X7R"
+    assert c_in_hf.value >= 100nF * 0.8
+    assert c_in_hf.voltage >= v_in * 2
 
     # 8.2.2.8 Bootstrap Capacitor Selection
     c_boot = new Capacitor
     ic.SW ~ c_boot.p1; c_boot.p2 ~ ic.BOOT
     c_boot.value = 100nF +/- 21%
-    c_boot.voltage = 16V * (1 to 100)
-    c_boot.dielectric = "X7R"
-    c_boot.footprint = "C0603"
+    c_boot.voltage = 16V * (1 to 1000)
+    # The bootstrap cap should have a dielectric X7R or better
 
 
 from "power_parts.ato" import TSS310LA, SQH6045S_8R2M_LF, ECG2CM8R2E12OTBO, NM1206B104K251CEGN, TCC1206X7R226K100HT
@@ -179,3 +178,23 @@ module LMR16030BuckDemo:
     led = new LEDIndicatorRed
     buck.power_out ~ led.power
     led.v_in = buck.v_out
+
+
+module Reg15V from LMR16030Buck:
+    v_in = 40V to 60V
+    v_out = 15V +/- 6%
+    switching_frequency = 650kHz +/- 5%
+    output_ripple = 120mV
+
+    inductor.rated_current = 4A
+    inductor.value = 22 to 32uH
+    c_out.voltage = 35V
+    diode.breakdown_voltage = 75V
+    diode.rated_current = 4A
+    c_in_bulk.value = 10uF to 22uF
+    c_in_bulk.voltage = 120V
+    c_in_hf.value = 100nF to 1uF
+    c_in_hf.voltage = 120V
+
+    c_out.value = 10uF
+    c_out.esr = 40mΩ

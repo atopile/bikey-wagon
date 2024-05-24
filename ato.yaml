@@ -7,21 +7,22 @@ builds:
     dont_solve_equations: true
     exclude_targets:
       # - layout-module-map  # This is the only one we're still building
-      - copy-footprints
-      - copy-3dmodels
-      - netlist
-      - bom
-      - designator-map
-      - clone-footprints
-      - assertions-report
-      - variable-report
+    - copy-footprints
+    - copy-3dmodels
+    - netlist
+    - bom
+    - designator-map
+    - clone-footprints
+    - assertions-report
+    - variable-report
   lmr16030buck-demo:  # Here as a development board
     entry: elec/src/LMR16030_regulator.ato:LMR16030BuckDemo
+
 dependencies:
 - name: generics
-  version_spec: '@09ad6baeaab93d53b9b6c90069ac750f4161d76f'
-  link_broken: true
-  path: elec/src/generics
+  version_spec: '@main'
+  link_broken: false
+  path: .ato/modules/generics
 - name: nau7802
   version_spec: '@62f6a4c6bbca2d423eabed6fb5319fcd8ff55f7c'
   link_broken: false
@@ -38,3 +39,19 @@ dependencies:
   version_spec: '@3719ec970da96df05b6763671993ca2276df968b'
   link_broken: false
   path: .ato/modules/xt-connectors
+- name: spin-servo-drive
+  version_spec: '@89c254bf246191e623df046ad3543b936d7f9bd3'
+  link_broken: false
+  path: .ato/modules/spin-servo-drive
+- name: https://github.com/atopile/spin-servo-drive/
+  version_spec: '@main'
+  link_broken: false
+  path: .ato/modules/spin-servo-drive
+- name: drv8300
+  version_spec:
+  link_broken: false
+  path: .ato/modules/drv8300
+- name: https://github.com/atopile/spin-servo-drive
+  version_spec:
+  link_broken: false
+  path: .ato/modules/spin-servo-drive

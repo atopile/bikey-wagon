@@ -75,7 +75,7 @@ module LMR16030Buck from AdjustableRegulator:
     # 8.2.2.2 Output Voltage Set-Point
     # The remainder of this is handeled in our super class
     power_out ~ feedback_div.power
-    feedback_div.output.vcc ~ ic.FB
+    feedback_div.output.io ~ ic.FB
     v_ref = 0.75V
 
     # 8.2.2.3 Switching Frequency

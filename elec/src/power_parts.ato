@@ -1,6 +1,9 @@
 from "generics/inductors.ato" import Inductor
 from "generics/diodes.ato" import SchottkyDiode
 from "generics/capacitors.ato" import CapacitorElectrolytic, Capacitor
+from "generics/mosfets.ato" import NFET
+from "generics/resistors.ato" import Resistor
+
 
 component SQH6045S_8R2M_LF from Inductor:
     """3.1A 8.2uH ±20% SMD Power Inductors ROHS"""
@@ -49,7 +52,7 @@ component NM1206B104K251CEGN from Capacitor:
     mpn = "C710467"
 
     value = 100nF +/- 10%
-    voltage = 250V
+    rated_voltage = 250V
     dialectric = "X7R"
 
 
@@ -60,5 +63,75 @@ component TCC1206X7R226K100HT from Capacitor:
     mpn = "C45783"
 
     value = 22uF +/- 20%
-    voltage = 25V
+    rated_voltage = 25V
     dialectric = "X5R"
+
+
+component BSC070N10NS3G from NFET:
+    # component BSC070N10NS3G
+    footprint = "PG-TDSON-8_L5.0-W6.0-P1.27-BL-EP"
+    lcsc_id = "C501502"
+    mpn = "C501502"
+    # pins
+    signal source ~ pin 1
+    source ~ pin 2
+    source ~ pin 3
+    signal gate ~ pin 4
+    signal drain ~ pin 5
+    drain ~ pin 6
+    drain ~ pin 7
+    drain ~ pin 8
+
+    gate_charge = 42nC to 55nC
+    rated_current = 90A
+    rated_voltage = 100V
+    on_resistance = 7mΩ
+
+
+component SEWF3920F1L00P9 from Resistor:
+    # component SEWF3920F1L00P9
+    footprint = "R3920"
+    lcsc_id = "C5224161"
+    mpn = "C5224161"
+    # pins
+    signal p2 ~ pin 2
+    signal p1 ~ pin 1
+
+    value = 1mΩ
+
+
+component ECE2CM220F16OTPO from CapacitorElectrolytic:
+    # component ECE2CM220F16OTPO
+    footprint = "CAP-TH_BD8.0-P3.50-D0.6-FD"
+    lcsc_id = "C525473"
+    mpn = "C525473"
+
+    pin 1 ~ power.vcc
+    pin 2 ~ power.gnd
+
+    value = 22uF +/- 20%
+    rated_voltage = 160V
+
+
+component CDRH127_LDNP_270MC from Inductor:
+    footprint = "IND-SMD_L12.0-W12.0_CDRH127NP"
+    lcsc_id = "C879420"
+    mpn = "C879420"
+
+    value = 27uH +/- 20%
+    rated_current = 4.2A
+
+
+component SS510_C908682 from SchottkyDiode:
+    # component SS510_C908682
+    footprint = "SMA_L4.3-W2.6-LS5.0-RD"
+    lcsc_id = "C908682"
+    mpn = "C908682"
+
+    # pins
+    anode ~ pin 2
+    cathode ~ pin 1
+
+    # electrical properties
+    breakdown_voltage = 100V
+    rated_current = 5A

@@ -1,42 +1,149 @@
-from "LMR16030_regulator.ato" import LMR16030Buck_3V3_3A
+from "LMR16030_regulator.ato" import LMR16030Buck
 from "generics/filters.ato" import LowPassFilter
+from "spin-servo-drive/elec/src/power-stage.ato" import PowerStage
+from "generics/interfaces.ato" import Power
+from "generics/mosfets.ato" import HalfBridge
+from "power_parts.ato" import BSC070N10NS3G, SEWF3920F1L00P9, ECE2CM220F16OTPO, CDRH127_LDNP_270MC, SS510_C908682, NM1206B104K251CEGN, TCC1206X7R226K100HT
+from "LMR16030_regulator.ato" import LMR16030Buck
+
 
 module BikeyWagon:
+    power_batt = new Power
+
     cell_voltage = 2V to 4.2V
     series_cells = 13
-    max_voltage = cell_voltage * series_cells
+    pack_voltage = cell_voltage * series_cells
 
     motor_power = 750W
-    motor_current = motor_power / max_voltage
+    inverter_current_rms = motor_power / pack_voltage
 
-    max_speed = 40kph
-    wheel_diameter = 16inch to 700mm
-    wheel_circumference = wheel_diameter * 3.1459
-    max_wheel_speed = max_speed / wheel_circumference
+    motor_phase_current_rms = inverter_current_rms * 1.732
+    motor_phase_current_peak = motor_phase_current_rms * 1.414
 
-    motor_pole_pairs = 6 to 20
-    motor_electrical_speed = max_wheel_speed * motor_pole_pairs
+    ####################
+    # Inverters
+    ####################
 
-    demo_hall_lpf = new LowPassFilter
-    demo_hall_lpf.cutoff_frequency = (10 to 15) * max(motor_electrical_speed)
+    inverter_a = new BikeyWagonPowerStage
+    inverter_b = new BikeyWagonPowerStage
+    inverter_a.switching_frequency = 25kHz
+    inverter_b.switching_frequency = inverter_a.switching_frequency
+    inverter_a.gate_drive_voltage = 10V
+    inverter_b.gate_drive_voltage = inverter_a.gate_drive_voltage
+    power_batt ~ inverter_a.power_batt
+    power_batt ~ inverter_b.power_batt
+    inverter_a.phase_current = motor_phase_current_peak
+    inverter_b.phase_current = motor_phase_current_peak
+
+    ####################
+    # Power Supplies
+    ####################
+    reg_10v = new Reg10V
+    reg_10v.v_in = pack_voltage
+
+    a=0  # Hack to continue the block, so the language
+    # server gives suggestions at the bottom of the block
 
 
+module Reg10V from LMR16030Buck:
+    v_out = 10V +/- 6%
+    switching_frequency = 650kHz +/- 5%
+    output_ripple = 120mV
+
+    # inductor.rated_current = 4A
+    # inductor.value = 22 to 32uH
+    inductor -> CDRH127_LDNP_270MC
+
+    # diode.breakdown_voltage = 75V
+    # diode.rated_current = 4A
+    diode -> SS510_C908682
+
+    # c_in_bulk.value = 10uF to 22uF
+    # c_in_bulk.voltage = 120V
+    c_in_bulk -> ECE2CM220F16OTPO
+
+    # c_in_hf.value = 100nF to 1uF
+    # c_in_hf.voltage = 120V
+    c_in_hf -> NM1206B104K251CEGN
+
+    # c_out.voltage = 25V
+    # c_out.value = 10uF
+    c_out -> TCC1206X7R226K100HT
+    c_out.esr = 40mΩ
 
 
+module BikeyWagonHalfBridge from HalfBridge:
+    top_fet = new BSC070N10NS3G
+    bottom_fet = new BSC070N10NS3G
+
+    power.vcc ~ top_fet.drain; top_fet.source ~ bottom_fet.drain; bottom_fet.source ~ power.gnd
+    gate_high.io ~ top_fet.gate
+    gate_low.io ~ bottom_fet.gate
+    top_fet.source ~ output.io
+
+    power.gnd ~ output.gnd
+    power.gnd ~ gate_high.gnd
+    power.gnd ~ gate_low.gnd
+
+    gate_charge = top_fet.gate_charge
+    rated_current = top_fet.rated_current
+    rated_voltage = top_fet.rated_voltage
+    on_resistance = top_fet.on_resistance
 
 
+module BikeyWagonPowerStage from PowerStage:
+    phase_a.half_bridge -> BikeyWagonHalfBridge
+    phase_b.half_bridge -> BikeyWagonHalfBridge
+    phase_c.half_bridge -> BikeyWagonHalfBridge
+
+    phase_a.current_sensor.max_power_dissapation = 8W
+    phase_b.current_sensor.max_power_dissapation = 8W
+    phase_c.current_sensor.max_power_dissapation = 8W
+    phase_a.current_sensor.shunt -> SEWF3920F1L00P9
+    phase_b.current_sensor.shunt -> SEWF3920F1L00P9
+    phase_c.current_sensor.shunt -> SEWF3920F1L00P9
+
+    bulk_caps -> BulkCaps
+
+    phase_a.current_sensor.feedback_div.r_top.value = 45.3kΩ ± 498.3Ω
+    phase_b.current_sensor.feedback_div.r_top.value = 45.3kΩ ± 498.3Ω
+    phase_c.current_sensor.feedback_div.r_top.value = 45.3kΩ ± 498.3Ω
+    phase_a.current_sensor.feedback_div.r_bottom.value = 866 ± 9.53 kΩ
+    phase_b.current_sensor.feedback_div.r_bottom.value = 866 ± 9.53 kΩ
+    phase_c.current_sensor.feedback_div.r_bottom.value = 866 ± 9.53 kΩ
+    phase_a.current_sensor.output_filter.resistor.value = 6.04Ω ± 66.44mΩ
+    phase_b.current_sensor.output_filter.resistor.value = 6.04Ω ± 66.44mΩ
+    phase_c.current_sensor.output_filter.resistor.value = 6.04Ω ± 66.44mΩ
 
 
-
-
-
-
-
-
-
-
-
-
-
+    # Connect to us!
+    # power_batt
+    # power_gate
+    # power_3v3
+    # enable
+    # phase_a_control
+    # phase_b_control
+    # phase_c_control
+    # phase_a_current
+    # phase_b_current
+    # phase_c_current
+    # phase_a_output
+    # phase_b_output
+    # phase_c_output
 
     a=0
+
+
+module BulkCaps:
+    power = new Power
+    c_1 = new ECE2CM220F16OTPO
+    c_2 = new ECE2CM220F16OTPO
+    c_3 = new ECE2CM220F16OTPO
+    c_4 = new ECE2CM220F16OTPO
+    c_5 = new ECE2CM220F16OTPO
+    power ~ c_1.power
+    power ~ c_2.power
+    power ~ c_3.power
+    power ~ c_4.power
+    power ~ c_5.power
+    value = c_1.value + c_2.value + c_3.value + c_4.value + c_5.value

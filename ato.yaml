@@ -39,19 +39,11 @@ dependencies:
   version_spec: '@3719ec970da96df05b6763671993ca2276df968b'
   link_broken: false
   path: .ato/modules/xt-connectors
-- name: spin-servo-drive
-  version_spec: '@89c254bf246191e623df046ad3543b936d7f9bd3'
-  link_broken: false
-  path: .ato/modules/spin-servo-drive
-- name: https://github.com/atopile/spin-servo-drive/
-  version_spec: '@main'
-  link_broken: false
-  path: .ato/modules/spin-servo-drive
-- name: drv8300
-  version_spec:
-  link_broken: false
-  path: .ato/modules/drv8300
 - name: https://github.com/atopile/spin-servo-drive
-  version_spec:
+  version_spec: mawildoer/add-basic-properties-to-NFETs
   link_broken: false
   path: .ato/modules/spin-servo-drive
+- name: lv2842xlvddcr
+  version_spec: '@63615f935a2727e9b8d55e61e7fb02d444641778'
+  link_broken: false
+  path: .ato/modules/lv2842xlvddcr

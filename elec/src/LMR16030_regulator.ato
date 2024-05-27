@@ -108,7 +108,7 @@ module LMR16030Buck from AdjustableRegulator:
     # Since the above is generally a conservative case, we're
     # ignoring the step change sizing case
 
-    assert c_out.voltage > v_out * 2
+    assert c_out.rated_voltage > v_out * 2
 
     # 8.2.2.6 Schottky Diode Selection
     diode = new SchottkyDiode
@@ -120,7 +120,7 @@ module LMR16030Buck from AdjustableRegulator:
     c_in_bulk = new Capacitor
     power_in ~ c_in_bulk.power
     assert c_in_bulk.value >= 4.7uF
-    assert c_in_bulk.voltage >= v_in * 2
+    assert c_in_bulk.rated_voltage >= v_in * 2
     # The datasheet recommends XR7 dielectric
     # for the bulk input capacitor, but I haven't been
     # able to find one with a voltage rating that high
@@ -128,17 +128,57 @@ module LMR16030Buck from AdjustableRegulator:
     c_in_hf = new Capacitor
     power_in ~ c_in_hf.power
     assert c_in_hf.value >= 100nF * 0.8
-    assert c_in_hf.voltage >= v_in * 2
+    assert c_in_hf.rated_voltage >= v_in * 2
 
     # 8.2.2.8 Bootstrap Capacitor Selection
     c_boot = new Capacitor
     ic.SW ~ c_boot.p1; c_boot.p2 ~ ic.BOOT
     c_boot.value = 100nF +/- 21%
-    c_boot.voltage = 16V * (1 to 1000)
+    c_boot.rated_voltage = 16V * (1 to 1000)
     # The bootstrap cap should have a dielectric X7R or better
+
+    ############################
+    # Replacement guards
+    ############################
+    # These are here to ensure you replace the components you need to
+    inductor -> _NotImplementedInductor
+    diode -> _NotImplementedDiode
+    c_in_bulk -> _NotImplementedCapacitor
+    c_in_hf -> _NotImplementedCapacitor
+    c_out -> _NotImplementedCapacitor
+
+###################################################
+# Example usage: Stage 1
+# First, find a set of working values for the module
+###################################################
+module Reg15V from LMR16030Buck:
+    v_in = 40V to 60V
+    v_out = 15V +/- 6%
+    switching_frequency = 650kHz +/- 5%
+    output_ripple = 120mV
+
+    inductor.rated_current = 4A
+    inductor.value = 22 to 32uH
+
+    diode.breakdown_voltage = 75V
+    diode.rated_current = 4A
+
+    c_in_bulk.value = 10uF to 22uF
+    c_in_bulk.voltage = 120V
+    c_in_hf.value = 100nF to 1uF
+    c_in_hf.voltage = 120V
+
+    c_out.voltage = 35V
+    c_out.value = 10uF
+    c_out.esr = 40mΩ
 
 
 from "power_parts.ato" import TSS310LA, SQH6045S_8R2M_LF, ECG2CM8R2E12OTBO, NM1206B104K251CEGN, TCC1206X7R226K100HT
+
+###################################################
+# Example usage: Stage 2
+# Select specific components once you've found their specs
+###################################################
 
 module LMR16030Buck_3V3_3A from LMR16030Buck:
     """
@@ -160,6 +200,7 @@ module LMR16030Buck_3V3_3A from LMR16030Buck:
     # and it's the point at which all the assertions begin to pass
     c_out.esr = 40mΩ
 
+
 from "xt-connectors/xt-connectors.ato" import XT30_Female_Right_Angle, XT30_Male_Right_Angle
 from "generics/leds.ato" import LEDIndicatorRed
 
@@ -180,21 +221,16 @@ module LMR16030BuckDemo:
     led.v_in = buck.v_out
 
 
-module Reg15V from LMR16030Buck:
-    v_in = 40V to 60V
-    v_out = 15V +/- 6%
-    switching_frequency = 650kHz +/- 5%
-    output_ripple = 120mV
+component _NotImplementedInductor from Inductor:
+    """If you're seeing this, it means that you forgot to replace a component with something useful."""
+    assert 1 within 0
 
-    inductor.rated_current = 4A
-    inductor.value = 22 to 32uH
-    c_out.voltage = 35V
-    diode.breakdown_voltage = 75V
-    diode.rated_current = 4A
-    c_in_bulk.value = 10uF to 22uF
-    c_in_bulk.voltage = 120V
-    c_in_hf.value = 100nF to 1uF
-    c_in_hf.voltage = 120V
 
-    c_out.value = 10uF
-    c_out.esr = 40mΩ
+component _NotImplementedDiode from SchottkyDiode:
+    """If you're seeing this, it means that you forgot to replace a component with something useful."""
+    assert 1 within 0
+
+
+component _NotImplementedCapacitor from Capacitor:
+    """If you're seeing this, it means that you forgot to replace a component with something useful."""
+    assert 1 within 0

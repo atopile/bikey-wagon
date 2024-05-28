@@ -3,6 +3,7 @@ from "generics/diodes.ato" import SchottkyDiode
 from "generics/capacitors.ato" import CapacitorElectrolytic, Capacitor
 from "generics/mosfets.ato" import NFET
 from "generics/resistors.ato" import Resistor
+from "generics/interfaces.ato" import Power
 
 
 component SQH6045S_8R2M_LF from Inductor:
@@ -135,3 +136,18 @@ component SS510_C908682 from SchottkyDiode:
     # electrical properties
     breakdown_voltage = 100V
     rated_current = 5A
+
+
+component XT60PW_Male:
+    # component XT60PW_minus_M
+    footprint = "CONN-TH_XT60PW-M"
+    lcsc_id = "C98732"
+    mpn = "C98732"
+    power = new Power
+    # pins
+    signal minus ~ pin 1
+    signal plus ~ pin 2
+    signal _3 ~ pin 3
+    signal _4 ~ pin 4
+    minus ~ power.gnd
+    plus ~ power.vcc

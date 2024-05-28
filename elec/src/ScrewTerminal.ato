@@ -1,0 +1,11 @@
+component ScrewTerminal5P:
+    # component MX128_minus_2_period_54_minus_05P_minus_GN01_minus_CU_minus_Y_minus_A
+    footprint = "CONN-TH_5P-P2.54_MX128-2.54-05P-GN01-CU-Y-A"
+    lcsc_id = "C5188445"
+    mpn = "C5188445"
+    # pins
+    signal _1 ~ pin 1
+    signal _2 ~ pin 2
+    signal _3 ~ pin 3
+    signal _4 ~ pin 4
+    signal _5 ~ pin 5

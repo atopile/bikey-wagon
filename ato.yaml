@@ -47,3 +47,7 @@ dependencies:
   version_spec: '@63615f935a2727e9b8d55e61e7fb02d444641778'
   link_broken: false
   path: .ato/modules/lv2842xlvddcr
+- name: ams1117-33
+  version_spec:
+  link_broken: false
+  path: .ato/modules/ams1117-33

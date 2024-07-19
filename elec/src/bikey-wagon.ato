@@ -151,9 +151,9 @@ module BikeyWagonPowerStage from PowerStage:
 
     bulk_caps -> BulkCaps
 
-    phase_a.current_sensor.feedback_div.r_top.value = 45.3kΩ ± 498.3Ω
-    phase_b.current_sensor.feedback_div.r_top.value = 45.3kΩ ± 498.3Ω
-    phase_c.current_sensor.feedback_div.r_top.value = 45.3kΩ ± 498.3Ω
+    phase_a.current_sensor.feedback_div.r_top.value = 20.5kΩ ± 1.1%
+    phase_b.current_sensor.feedback_div.r_top.value = 20.5kΩ ± 1.1%
+    phase_c.current_sensor.feedback_div.r_top.value = 20.5kΩ ± 1.1%
     phase_a.current_sensor.feedback_div.r_bottom.value = 866 ± 9.53 kΩ
     phase_b.current_sensor.feedback_div.r_bottom.value = 866 ± 9.53 kΩ
     phase_c.current_sensor.feedback_div.r_bottom.value = 866 ± 9.53 kΩ
@@ -176,8 +176,6 @@ module BikeyWagonPowerStage from PowerStage:
     # phase_a_output
     # phase_b_output
     # phase_c_output
-
-    a=0
 
 
 module BulkCaps:

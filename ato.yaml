@@ -40,7 +40,7 @@ dependencies:
   link_broken: false
   path: .ato/modules/xt-connectors
 - name: https://github.com/atopile/spin-servo-drive
-  version_spec: mawildoer/add-basic-properties-to-NFETs
+  version_spec: '@main'
   link_broken: false
   path: .ato/modules/spin-servo-drive
 - name: lv2842xlvddcr

@@ -43,7 +43,7 @@ component ECG2CM8R2E12OTBO from CapacitorElectrolytic:
     pin 2 ~ power.gnd
 
     value = 8.2uF +/- 20%
-    voltage = 160V
+    rated_voltage = 160V
 
 
 component NM1206B104K251CEGN from Capacitor:

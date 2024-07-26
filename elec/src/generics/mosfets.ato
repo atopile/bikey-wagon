@@ -1,0 +1,71 @@
+import Power from "interfaces.ato"
+import Pair from "interfaces.ato"
+import DiffPair from "interfaces.ato"
+import Load from "interfaces.ato"
+import Resistor from "resistors.ato"
+import Diode from "diodes.ato"
+
+
+component NFET:
+    signal gate
+    signal drain
+    signal source
+    designator_prefix = "Q"
+    mpn = "generic_mosfet"
+    type = "mosfet"
+    polarity = "N Channel"
+
+    gate_charge: charge
+    rated_current: current
+    rated_voltage: voltage
+    on_resistance: resistance
+
+
+component PFET:
+    signal gate
+    signal drain
+    signal source
+    designator_prefix = "Q"
+    mpn = "generic_mosfet"
+    type = "mosfet"
+    polarity = "P Channel"
+
+
+module HalfBridge:
+    power = new Power
+    gate_high = new Pair
+    gate_low = new Pair
+    output = new Pair
+
+    gate_charge: charge
+    rated_current: current
+    rated_voltage: voltage
+    on_resistance: resistance
+
+
+module LowSideSwitch:
+    fet = new Mosfet_nchannel
+    gate_resistor = new Resistor
+    pulldown_resistor = new Resistor
+    freewheel_diode = new Diode
+
+    power = new Power
+    load = new Load
+
+    input = new Pair
+
+    # connect up circuit
+    input.io ~ gate_resistor.p1; gate_resistor.p2 ~ fet.gate
+    input.gnd ~ power.gnd
+
+    # load and diode between power and fet
+    power.vcc ~ freewheel_diode.cathode; freewheel_diode.anode ~ fet.drain
+    power.vcc ~ load.p; load.n ~ fet.drain
+
+    # source to ground
+    fet.source ~ power.gnd
+
+
+import NTTFS4C25NTWG from "elec/src/NTTFS4C25NTWG.ato"
+module LowSideSwitch30V5A from LowSideSwitch:
+    fet -> NTTFS4C25NTWG

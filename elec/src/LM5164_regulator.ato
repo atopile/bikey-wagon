@@ -85,8 +85,8 @@ module LM5164Buck from AdjustableRegulator:
     r_switching_frequency = new Resistor  # Rt in the datasheet
     ic.RON ~ r_switching_frequency.p1; r_switching_frequency.p2 ~ ic.GND
     # Use an assertion here rather than an assignment in case we replace the resistor elsewhere
-    assert r_switching_frequency.value within (v_out * 2500) / (switching_frequency / 1kHz) * 1kΩ
-    assert (r_switching_frequency.value / 1kΩ) / (v_in * 2.5) * 1us > 50ns
+    assert r_switching_frequency.value within (v_out/1V * 2500) / (switching_frequency / 1kHz) * 1kΩ
+    assert (r_switching_frequency.value / 1kΩ) / (v_in/1V * 2.5) * 1us > 50ns
     r_switching_frequency.footprint = "R0402"
 
     # 6.3.9 Optional: Enable / UVLO
@@ -101,7 +101,7 @@ module LM5164Buck from AdjustableRegulator:
 
     k_ind = inductor_ripple_current / max(output_current)
 
-    assert k_ind <= 0.4  # The datasheet says min 0.2, but I believe they mean that's a reasonable minimum for component selection
+    assert k_ind <= 0.5  # For most applications, choose an inductance such that the inductor ripple current, ΔIL, is between 30% and 50% of the rated load current at nominal input voltage. 
 
     l_min = (max(v_in) - v_out) / (max(output_current) * max(k_ind)) * v_out / (max(v_in) * switching_frequency)  # Min inductor value
     assert inductor.value >= l_min  #Make sure the inductor is large enough to keep our ripple current in check
@@ -171,21 +171,22 @@ module Reg10V_1 from LM5164Buck:
     c_out.esr = 40mΩ
 
 
-from "power_parts.ato" import CDRH127_LDNP_270MC, ECE2CM220F16OTPO, NM1206B104K251CEGN, TCC1206X7R226K100HT
+from "power_parts.ato" import CDRH104RT125NP_680MC, ECE2CM220F16OTPO, NM1206B104K251CEGN, TCC1206X7R226K100HT
 
 ###################################################
 # Example usage: Stage 2
 # Select specific components once you've found their specs
 ###################################################
 
-module Reg10V from LMR16030Buck:
+module Reg10V from LM5164Buck:
+    v_in = 48V to 68V
     v_out = 10V +/- 6%
-    switching_frequency = 650kHz +/- 5%
+    switching_frequency = 400kHz +/- 5%
     output_ripple = 120mV
 
     # inductor.rated_current = 4A
     # inductor.value = 22 to 32uH
-    inductor -> CDRH127_LDNP_270MC
+    inductor -> CDRH104RT125NP_680MC
 
     # c_in_bulk.value = 10uF to 22uF
     # c_in_bulk.voltage = 120V
@@ -204,7 +205,7 @@ module Reg10V from LMR16030Buck:
 from "xt-connectors/xt-connectors.ato" import XT30_Female_Right_Angle, XT30_Male_Right_Angle
 from "generics/leds.ato" import LEDIndicatorRed
 
-module LMR16030BuckDemo:
+module LM5164BuckDemo:
     """
     This is a demo board of the Reg10V module
     """

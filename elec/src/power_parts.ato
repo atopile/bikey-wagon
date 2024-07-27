@@ -122,6 +122,14 @@ component CDRH127_LDNP_270MC from Inductor:
     value = 27uH +/- 20%
     rated_current = 4.2A
 
+component CDRH104RT125NP_680MC from Inductor:
+    footprint = "IND-SMD_L10.2-W10.0"
+    lcsc_id = "C167254"
+    mpn = "C167254"
+
+    value = 68uH +/- 20%
+    rated_current = 1.25A
+
 
 component SS510_C908682 from SchottkyDiode:
     # component SS510_C908682

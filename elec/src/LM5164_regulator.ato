@@ -121,7 +121,7 @@ module LM5164Buck from AdjustableRegulator:
     # 8.2.2.7 Input Capacitor Selection
     c_in_bulk = new Capacitor
     power_in ~ c_in_bulk.power
-    assert c_in_bulk.value >= 4.7uF
+    assert c_in_bulk.value >= 2uF
     assert c_in_bulk.rated_voltage >= v_in * 1.2
     # The datasheet recommends XR7 dielectric
     # for the bulk input capacitor, but I haven't been
@@ -171,7 +171,7 @@ module Reg10V_1 from LM5164Buck:
     c_out.esr = 40mΩ
 
 
-from "power_parts.ato" import CDRH104RT125NP_680MC, ECE2CM220F16OTPO, NM1206B104K251CEGN, TCC1206X7R226K100HT
+from "power_parts.ato" import CDRH104RT125NP_680MC, HMK325C7475KM_PE, WALSIN_0805B224K101CT, TCC1206X7R226K100HT
 
 ###################################################
 # Example usage: Stage 2
@@ -190,16 +190,18 @@ module Reg10V from LM5164Buck:
 
     # c_in_bulk.value = 10uF to 22uF
     # c_in_bulk.voltage = 120V
-    c_in_bulk -> ECE2CM220F16OTPO
+    c_in_bulk -> HMK325C7475KM_PE
 
     # c_in_hf.value = 100nF to 1uF
     # c_in_hf.voltage = 120V
-    c_in_hf -> NM1206B104K251CEGN
+    c_in_hf -> WALSIN_0805B224K101CT
 
     # c_out.voltage = 25V
     # c_out.value = 10uF
     c_out -> TCC1206X7R226K100HT
     c_out.esr = 40mΩ
+    c_out_extra = new TCC1206X7R226K100HT
+    c_out_extra.power ~ c_out.power
 
 
 from "xt-connectors/xt-connectors.ato" import XT30_Female_Right_Angle, XT30_Male_Right_Angle

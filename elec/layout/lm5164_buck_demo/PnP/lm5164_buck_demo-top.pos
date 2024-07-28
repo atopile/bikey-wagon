@@ -1,0 +1,20 @@
+### Footprint positions - created on 2024-07-28T15:09:05-0700 ###
+### Printed by KiCad version 8.0.4
+## Unit = mm, Angle = deg.
+## Side : top
+# Ref     Val                                                                                            Package                                PosX       PosY       Rot  Side
+C1        22uF_+/-_20%                                                                                   C0805                              146.7500  -105.5000  -90.0000  top
+C2        4.7uF_+/-_10%                                                                                  C1210                              145.0000  -110.5000    0.0000  top
+C3        220nF_+/-_10%                                                                                  C0805                              143.5000  -114.0500   90.0000  top
+C4        50V_100nF_X7R_±10%_0603__Multilayer_Ceramic_Capacitors_MLCC_-_SMD/SMT_ROHS                    C0603                              154.0000  -114.5000  -90.0000  top
+C5        22uF_+/-_20%                                                                                   C0805                              144.5000  -105.5000  -90.0000  top
+J1                                                                                                       CONN-TH_XT30PW-M                   141.4780   -87.8805  180.0000  top
+J2                                                                                                       CONN-TH_XT30PW-M                   155.3600   -87.8805  180.0000  top
+L1        68uH_+/-_20%                                                                                   IND-SMD_L10.2-W10.0                153.0000  -106.5000  -90.0000  top
+LED1                                                                                                     LED0603-RD                         142.5000  -104.2000   90.0000  top
+R1        62.5mW_Thick_Film_Resistors_50V_±100ppm/℃_±1%_66.5kΩ_0402__Chip_Resistor_-_Surface_Mount_ROHS  R0402                              155.4440  -117.6280  -90.0000  top
+R2        62.5mW_Thick_Film_Resistors_50V_±100ppm/℃_±1%_9.1kΩ_0402__Chip_Resistor_-_Surface_Mount_ROHS  R0402                              153.6660  -118.3900  180.0000  top
+R3        62.5mW_Thick_Film_Resistors_50V_±100ppm/℃_±1%_62kΩ_0402__Chip_Resistor_-_Surface_Mount_ROHS  R0402                              146.8100  -118.8980    0.0000  top
+R4        62.5mW_Thick_Film_Resistors_50V_±100ppm/℃_±1%_4.42kΩ_0402__Chip_Resistor_-_Surface_Mount_ROHS  R0402                              142.5000  -107.0000  -90.0000  top
+U1                                                                                                       SO-8_L4.9-W3.9-P1.27-LS6.0-BL-EP   148.8400  -115.5960  -90.0000  top
+## End

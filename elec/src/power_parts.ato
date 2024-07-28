@@ -56,7 +56,25 @@ component NM1206B104K251CEGN from Capacitor:
     rated_voltage = 250V
     dialectric = "X7R"
 
+component WALSIN_0805B224K101CT from Capacitor:
+    """100V 220nF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"""
+    footprint = "C0805"
+    lcsc_id = "C384763"
+    mpn = "C384763"
 
+    value = 220nF +/- 10%
+    rated_voltage = 100V
+    dialectric = "X7R"
+component HMK325C7475KM_PE from Capacitor:
+    """100V 4.7uF X7R ±10% 1210 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"""
+    footprint = "C1210"
+    lcsc_id = "C385987"
+    mpn = "C385987"
+
+    value = 4.7uF +/- 10%
+    rated_voltage = 100V
+    dialectric = "X7S"
+    
 component TCC1206X7R226K100HT from Capacitor:
     """25V 22uF X5R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"""
     footprint = "C0805"

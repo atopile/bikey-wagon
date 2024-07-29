@@ -1,4 +1,4 @@
-from "LMR16030_regulator.ato" import LMR16030Buck
+from "LM5164_regulator.ato" import Reg10V
 from "generics/filters.ato" import LowPassFilter
 from "spin-servo-drive/elec/src/power-stage.ato" import PowerStage
 from "generics/interfaces.ato" import Power
@@ -50,7 +50,7 @@ module BikeyWagon:
     batt_connector = new XT60PW_Male
     batt_connector.power ~ power_batt
 
-    reg_10v = new Reg10V
+    reg_10v = new LM5164_Reg10V
     reg_10v.v_in = pack_voltage
 
     reg_5v = new LV2842Kit
@@ -89,33 +89,6 @@ module BikeyWagon:
 
     a=0  # Hack to continue the block, so the language
     # server gives suggestions at the bottom of the block
-
-
-module Reg10V from LMR16030Buck:
-    v_out = 10V +/- 6%
-    switching_frequency = 650kHz +/- 5%
-    output_ripple = 120mV
-
-    # inductor.rated_current = 4A
-    # inductor.value = 22 to 32uH
-    inductor -> CDRH127_LDNP_270MC
-
-    # diode.breakdown_voltage = 75V
-    # diode.rated_current = 4A
-    diode -> SS510_C908682
-
-    # c_in_bulk.value = 10uF to 22uF
-    # c_in_bulk.voltage = 120V
-    c_in_bulk -> ECE2CM220F16OTPO
-
-    # c_in_hf.value = 100nF to 1uF
-    # c_in_hf.voltage = 120V
-    c_in_hf -> NM1206B104K251CEGN
-
-    # c_out.voltage = 25V
-    # c_out.value = 10uF
-    c_out -> TCC1206X7R226K100HT
-    c_out.esr = 40mΩ
 
 
 module BikeyWagonHalfBridge from HalfBridge:

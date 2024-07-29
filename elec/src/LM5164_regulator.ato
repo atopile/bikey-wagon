@@ -80,6 +80,27 @@ module LM5164Buck from AdjustableRegulator:
     power_out ~ feedback_div.power
     feedback_div.output.io ~ ic.FB
     v_ref = 1.2V
+    # Force bottom value so we get expected resistance for ripple generation
+    feedback_div.r_bottom.value = 51kΩ +/- 1%
+    i_q = 20uA to 100uA 
+
+    # Feedback Ripple Generation method: Type 3 
+    # This method is chosen since it does not rely on output capacitor ESR for stability
+    # TODO: generate values dynamically
+    Ra = new Resistor
+    Ca = new Capacitor
+    Cb = new Capacitor
+    Ra.p1 ~ ic.SW
+    Ca.p1 ~ power_out.vcc
+    Ra.p2 ~ Ca.p2
+    Cb.p1 ~ Ca.p2
+    Cb.p2 ~ ic.FB
+    Ra.value = 374kΩ +/- 1%
+    Ca.value = 4.7nF +/- 10%
+    Cb.value = 47pF +/- 10%
+    Ra.package = "0402"
+    Ca.package = "0402"
+    Cb.package = "0402"
 
     # 6.3.5 On-Time Generator / Switching Frequency
     r_switching_frequency = new Resistor  # Rt in the datasheet
@@ -153,20 +174,20 @@ module LM5164Buck from AdjustableRegulator:
 # First, find a set of working values for the module
 ###################################################
 module Reg10V_1 from LM5164Buck:
-    v_in = 40V to 60V
-    v_out = 10V +/- 6%
-    switching_frequency = 650kHz +/- 5%
+    v_in = 48V to 68V
+    v_out = 10V +/- 10%
+    switching_frequency = 400kHz +/- 5%
     output_ripple = 120mV
 
-    inductor.rated_current = 4A
-    inductor.value = 22 to 32uH
+    inductor.rated_current = 1.25A
+    inductor.value = 68uH +/- 20%
 
-    c_in_bulk.value = 10uF to 22uF
-    c_in_bulk.voltage = 120V
+    c_in_bulk.value = 2uF to 10uF
+    c_in_bulk.voltage = 100V
     c_in_hf.value = 100nF to 1uF
-    c_in_hf.voltage = 120V
+    c_in_hf.voltage = 100V
 
-    c_out.voltage = 35V
+    c_out.voltage = 25V
     c_out.value = 10uF
     c_out.esr = 40mΩ
 
@@ -178,28 +199,25 @@ from "power_parts.ato" import CDRH104RT125NP_680MC, HMK325C7475KM_PE, WALSIN_080
 # Select specific components once you've found their specs
 ###################################################
 
-module Reg10V from LM5164Buck:
+module LM5164_Reg10V from LM5164Buck:
     v_in = 48V to 68V
-    v_out = 10V +/- 6%
+    v_out = 10V +/- 10%
     switching_frequency = 400kHz +/- 5%
     output_ripple = 120mV
 
-    # inductor.rated_current = 4A
-    # inductor.value = 22 to 32uH
+    # 68uF buck inductor, rated to 1.25A
     inductor -> CDRH104RT125NP_680MC
 
-    # c_in_bulk.value = 10uF to 22uF
-    # c_in_bulk.voltage = 120V
+    # Specifying 100v caps for margin operating at 68V
+    # Bulk is 4.7uF, HF is 220nF
     c_in_bulk -> HMK325C7475KM_PE
-
-    # c_in_hf.value = 100nF to 1uF
-    # c_in_hf.voltage = 120V
     c_in_hf -> WALSIN_0805B224K101CT
 
     # c_out.voltage = 25V
     # c_out.value = 10uF
     c_out -> TCC1206X7R226K100HT
     c_out.esr = 40mΩ
+    # Extra cap to compensate for lower value at operating voltage
     c_out_extra = new TCC1206X7R226K100HT
     c_out_extra.power ~ c_out.power
 
@@ -211,7 +229,7 @@ module LM5164BuckDemo:
     """
     This is a demo board of the Reg10V module
     """
-    buck = new Reg10V
+    buck = new LM5164_Reg10V
 
     power_in = new XT30_Male_Right_Angle
     power_in.power ~ buck.power_in
@@ -222,6 +240,7 @@ module LM5164BuckDemo:
     led = new LEDIndicatorRed
     buck.power_out ~ led.power
     led.v_in = buck.v_out
+    led.resistor.value = 5.1kΩ +/- 1% # should get us a basic part
 
 
 component _NotImplementedInductor from Inductor:

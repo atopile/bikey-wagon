@@ -80,9 +80,19 @@ module LM5164Buck from AdjustableRegulator:
     Ra.value = 374kΩ +/- 1%
     Ca.value = 4.7nF +/- 10%
     Cb.value = 47pF +/- 10%
+    #assert Cb.ceramic = "C0G"
     Ra.package = "0402"
     Ca.package = "0402"
     Cb.package = "0402"
+    # # Check values against datasheet equations:
+    # Ton = r_switching_frequency.value / 1kΩ / (v_in/1V * 2.5) * 1us # On-time from equation 11
+    # tTR_setting = 75us # Desired load transient response settling time
+    # # Equation 24:
+    # assert Ca.value >= 10F / (switching_frequency * 1/(1/feedback_div.r_bottom.value + 1/feedback_div.r_top.value)/1Ω)
+    # # Equation 25:
+    # assert Ra.value * Ca.value <= (v_in - v_out) * Ton / 20mV
+    # # Equation 26:
+    # assert Cb.value >= tTR_setting / (3 * feedback_div.r_bottom.value)
 
     # 6.3.5 On-Time Generator / Switching Frequency
     r_switching_frequency = new Resistor  # Rt in the datasheet

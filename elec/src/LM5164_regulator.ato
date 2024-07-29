@@ -23,24 +23,6 @@ component LM5164DDAR:
     signal EP ~ pin 9
     EP ~ GND # EP is floating, but for heatsinking we connect to the GND plane
 
-component LMR16030SDDAR:
-    """SIMPLE SWITCHER 60V, 3A Step-Down Converter with 40uA Iq"""
-    footprint = "SO-8_L4.9-W3.9-P1.27-LS6.0-BL-EP"
-    lcsc_id = "C136648"
-    mpn = "C136648"
-
-    # pins
-    signal BOOT ~ pin 1
-    signal VIN ~ pin 2
-    signal EN ~ pin 3
-    signal RT_slash_SYNC ~ pin 4
-    signal FB ~ pin 5
-    signal SS ~ pin 6
-    signal GND ~ pin 7
-    signal SW ~ pin 8
-    signal EP ~ pin 9
-    EP ~ GND  # "Must be connected to GND on PCB"
-
 
 module LM5164Buck from AdjustableRegulator:
     """
@@ -192,7 +174,7 @@ module Reg10V_1 from LM5164Buck:
     c_out.esr = 40mΩ
 
 
-from "power_parts.ato" import CDRH104RT125NP_680MC, HMK325C7475KM_PE, WALSIN_0805B224K101CT, TCC1206X7R226K100HT
+from "power_parts.ato" import CDRH104RT125NP_680MC, HMK325C7475KM_PE, CL21B104KCFNNNE, CL21A226MAQNNNE
 
 ###################################################
 # Example usage: Stage 2
@@ -209,16 +191,16 @@ module LM5164_Reg10V from LM5164Buck:
     inductor -> CDRH104RT125NP_680MC
 
     # Specifying 100v caps for margin operating at 68V
-    # Bulk is 4.7uF, HF is 220nF
+    # Bulk is 4.7uF, HF is 100nF
     c_in_bulk -> HMK325C7475KM_PE
-    c_in_hf -> WALSIN_0805B224K101CT
+    c_in_hf -> CL21B104KCFNNNE
 
     # c_out.voltage = 25V
     # c_out.value = 10uF
-    c_out -> TCC1206X7R226K100HT
+    c_out -> CL21A226MAQNNNE
     c_out.esr = 40mΩ
     # Extra cap to compensate for lower value at operating voltage
-    c_out_extra = new TCC1206X7R226K100HT
+    c_out_extra = new CL21A226MAQNNNE
     c_out_extra.power ~ c_out.power
 
 

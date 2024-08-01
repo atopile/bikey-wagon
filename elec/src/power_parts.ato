@@ -56,8 +56,27 @@ component NM1206B104K251CEGN from Capacitor:
     rated_voltage = 250V
     dialectric = "X7R"
 
+component CL21B104KCFNNNE from Capacitor:
+    """BASIC 100V 100nF X7R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"""
+    footprint = "C0805"
+    lcsc_id = "C28233"
+    mpn = "C28233"
 
-component TCC1206X7R226K100HT from Capacitor:
+    value = 100nF +/- 10%
+    rated_voltage = 100V
+    dialectric = "X7R"
+
+component HMK325C7475KM_PE from Capacitor:
+    """100V 4.7uF X7R ±10% 1210 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"""
+    footprint = "C1210"
+    lcsc_id = "C385987"
+    mpn = "C385987"
+
+    value = 4.7uF +/- 10%
+    rated_voltage = 100V
+    dialectric = "X7S"
+    
+component CL21A226MAQNNNE from Capacitor:
     """25V 22uF X5R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"""
     footprint = "C0805"
     lcsc_id = "C45783"
@@ -121,6 +140,14 @@ component CDRH127_LDNP_270MC from Inductor:
 
     value = 27uH +/- 20%
     rated_current = 4.2A
+
+component CDRH104RT125NP_680MC from Inductor:
+    footprint = "IND-SMD_L10.2-W10.0"
+    lcsc_id = "C167254"
+    mpn = "C167254"
+
+    value = 68uH +/- 20%
+    rated_current = 1.25A
 
 
 component SS510_C908682 from SchottkyDiode:

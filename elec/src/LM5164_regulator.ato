@@ -1,0 +1,230 @@
+from "generics/capacitors.ato" import Capacitor
+from "generics/inductors.ato" import Inductor
+from "generics/interfaces.ato" import Pair, Power
+from "generics/regulators.ato" import AdjustableRegulator
+from "generics/resistors.ato" import Resistor
+from "generics/diodes.ato" import SchottkyDiode
+
+component LM5164DDAR:
+    # component LM5164DDAR
+    """ Synchronous step-down buck regulator 6 to 100 Vin, 1A DC load current, 10.5uA Iq """
+    footprint = "SO-8_L4.9-W3.9-P1.27-LS6.0-BL-EP"
+    lcsc_id = "C477928"
+    mpn = "C477928"
+    # pins
+    signal GND ~ pin 1
+    signal VIN ~ pin 2
+    signal EN_slash_UVLO ~ pin 3
+    signal RON ~ pin 4
+    signal FB ~ pin 5
+    signal PGOOD ~ pin 6
+    signal BST ~ pin 7
+    signal SW ~ pin 8
+    signal EP ~ pin 9
+    EP ~ GND # EP is floating, but for heatsinking we connect to the GND plane
+
+
+module LM5164Buck from AdjustableRegulator:
+    """
+    This follows the configuration here:
+    https://www.ti.com/lit/ds/symlink/lm5164.pdf
+
+    Usage:
+    - set v_in and v_out
+    - [optinal] set the additional "top-level" params below
+    - replace (->) the inductor and diode with the actual components
+    - set the inductor.value
+    - set the diode.voltage and diode.current
+    - set c_out value
+    - replace c_in_bulk and c_in_hf with actual components,
+        which should be 2x the voltage of v_in
+
+    """
+
+    # Additional top-level params to configure
+    output_current = 0 to 1A
+    output_ripple = 50mV
+    input_ripple = 400mV
+    switching_frequency = 500kHz ± 3%
+
+    assert v_out < v_in <= 100V
+    assert output_current <= 1A
+    assert switching_frequency within 200kHz to 1MHz
+
+    ic = new LM5164DDAR
+
+    # Power Input
+    power_in.vcc ~ ic.VIN
+    power_in.gnd ~ ic.GND
+
+    # Output Voltage Set-Point
+    # The remainder of this is handeled in our super class
+    power_out ~ feedback_div.power
+    feedback_div.output.io ~ ic.FB
+    v_ref = 1.2V
+    # Force bottom value so we get expected resistance for ripple generation
+    feedback_div.r_bottom.value = 51kΩ +/- 1%
+    i_q = 20uA to 100uA 
+    # TI recommends:
+    assert feedback_div.r_top.value within 100 kΩ to 1 MΩ
+
+    # Feedback Ripple Generation method: Type 3 
+    # This method is chosen since it does not rely on output capacitor ESR for stability
+    Ra = new Resistor
+    Ca = new Capacitor
+    Cb = new Capacitor
+    Ra.p1 ~ ic.SW
+    Ca.p1 ~ power_out.vcc
+    Ra.p2 ~ Ca.p2
+    Cb.p1 ~ Ca.p2
+    Cb.p2 ~ ic.FB
+    #assert Cb.ceramic = "C0G"
+    Ra.package = "0402"
+    Ca.package = "0402"
+    Cb.package = "0402"
+
+    # Check values against datasheet equations:
+    tTR_setting = 75us # Desired load transient response settling time
+    # Equation 24:
+    assert Ca.value >= 10 / (switching_frequency * 1/(1/feedback_div.r_bottom.value + 1/feedback_div.r_top.value))
+    # Equation 25:
+    Ton = (r_switching_frequency.value / 1kΩ) / (v_in/1V * 2.5) * 1us
+    Ton_min = 70 / (48 * 2.5) * 1us
+    Ton_max = 70 / (68 * 2.5) * 1us
+    assert Ra.value * Ca.value <= (v_in - v_out) * Ton_max / 20mV # Using Ton here breaks the build?!
+    # Equation 26:
+    assert Cb.value >= tTR_setting / (3 * feedback_div.r_top.value)
+
+    # 6.3.5 On-Time Generator / Switching Frequency
+    r_switching_frequency = new Resistor  # Rt in the datasheet
+    ic.RON ~ r_switching_frequency.p1; r_switching_frequency.p2 ~ ic.GND
+    # Use an assertion here rather than an assignment in case we replace the resistor elsewhere
+    assert r_switching_frequency.value within (v_out/1V * 2500) / (switching_frequency / 1kHz) * 1kΩ
+    assert Ton > 50ns
+    r_switching_frequency.footprint = "R0402"
+
+    # 6.3.9 Optional: Enable / UVLO
+    # Can set UVLO with an optional voltage divider, not implimented here
+    ic.VIN ~ ic.EN_slash_UVLO
+
+    # 8.2.2.4 Output Inductor Selection
+    inductor = new Inductor
+    ic.SW ~ inductor.p1; inductor.p2 ~ power_out.vcc
+    inductor_ripple_current = v_out * (max(v_in) - v_out) / (max(v_in) * inductor.value * switching_frequency)  # The ripple current in the inductor
+    assert inductor.rated_current >= output_current
+
+    k_ind = inductor_ripple_current / max(output_current)
+
+    assert k_ind <= 0.5  # For most applications, choose an inductance such that the inductor ripple current, ΔIL, is between 30% and 50% of the rated load current at nominal input voltage. 
+
+    l_min = (max(v_in) - v_out) / (max(output_current) * max(k_ind)) * v_out / (max(v_in) * switching_frequency)  # Min inductor value
+    assert inductor.value >= l_min  #Make sure the inductor is large enough to keep our ripple current in check
+
+    # 8.2.2.5 Output Capacitor Selection
+    c_out = new Capacitor
+    power_out ~ c_out.power
+    d_v_out_esr = inductor_ripple_current * c_out.esr
+    d_v_out_c = inductor_ripple_current / (8 * c_out.value * switching_frequency)
+
+    assert d_v_out_esr + d_v_out_c < output_ripple
+    # Since the above is generally a conservative case, we're
+    # ignoring the step change sizing case
+
+    assert c_out.rated_voltage > v_out * 2
+
+    # 8.2.2.7 Input Capacitor Selection
+    c_in_bulk = new Capacitor
+    power_in ~ c_in_bulk.power
+    assert c_in_bulk.value >= 2uF
+    assert c_in_bulk.rated_voltage >= v_in * 1.2
+    # The datasheet recommends XR7 dielectric
+    # for the bulk input capacitor, but I haven't been
+    # able to find one with a voltage rating that high
+
+    c_in_hf = new Capacitor
+    power_in ~ c_in_hf.power
+    assert c_in_hf.value >= 100nF * 0.8
+    assert c_in_hf.rated_voltage >= v_in * 1.2
+
+    # 8.2.2.8 Bootstrap Capacitor Selection
+    c_boot = new Capacitor
+    ic.SW ~ c_boot.p1; c_boot.p2 ~ ic.BST
+    c_boot.value = 100nF +/- 21%
+    c_boot.rated_voltage = 16V * (1 to 1000)
+    # The bootstrap cap should have a dielectric X7R or better
+
+    ############################
+    # Replacement guards
+    ############################
+    # These are here to ensure you replace the components you need to
+    inductor -> _NotImplementedInductor
+    c_in_bulk -> _NotImplementedCapacitor
+    c_in_hf -> _NotImplementedCapacitor
+    c_out -> _NotImplementedCapacitor
+
+from "power_parts.ato" import CDRH104RT125NP_680MC, HMK325C7475KM_PE, CL21B104KCFNNNE, CL21A226MAQNNNE
+
+module LM5164_Reg10V from LM5164Buck:
+    """
+    Actual working module with parts selected. Use this!
+    """
+    v_in = 48V to 68V
+    v_out = 10V +/- 10%
+    switching_frequency = 500kHz +/- 20%
+    output_ripple = 120mV
+
+    r_switching_frequency.value = 51kΩ +/- 1%
+    Ra.value = 357kΩ +/- 1%
+    Ca.value = 1nF +/- 10%
+    Cb.value = 100pF +/- 10%
+    # 68uF buck inductor, rated to 1.25A
+    inductor -> CDRH104RT125NP_680MC
+
+    # Specifying 100v caps for margin operating at 68V
+    # Bulk is 4.7uF, HF is 100nF
+    c_in_bulk -> HMK325C7475KM_PE
+    c_in_hf -> CL21B104KCFNNNE
+
+    # c_out.voltage = 25V
+    # c_out.value = 10uF
+    c_out -> CL21A226MAQNNNE
+    c_out.esr = 40mΩ
+    # Extra cap to compensate for lower value at operating voltage
+    c_out_extra = new CL21A226MAQNNNE
+    c_out_extra.power ~ c_out.power
+
+
+from "xt-connectors/xt-connectors.ato" import XT30_Female_Right_Angle, XT30_Male_Right_Angle
+from "generics/leds.ato" import LEDIndicatorRed
+
+module LM5164BuckDemo:
+    """
+    This is a demo board of the Reg10V module
+    """
+    buck = new LM5164_Reg10V
+
+    power_in = new XT30_Male_Right_Angle
+    power_in.power ~ buck.power_in
+
+    power_out = new XT30_Male_Right_Angle
+    power_out.power ~ buck.power_out
+
+    led = new LEDIndicatorRed
+    buck.power_out ~ led.power
+    led.v_in = buck.v_out
+    led.resistor.value = 5.1kΩ +/- 1% # should get us a basic part
+
+
+component _NotImplementedInductor from Inductor:
+    """If you're seeing this, it means that you forgot to replace a component with something useful."""
+    assert 1 within 0
+
+
+component _NotImplementedDiode from SchottkyDiode:
+    """If you're seeing this, it means that you forgot to replace a component with something useful."""
+    assert 1 within 0
+
+
+component _NotImplementedCapacitor from Capacitor:
+    """If you're seeing this, it means that you forgot to replace a component with something useful."""
+    assert 1 within 0

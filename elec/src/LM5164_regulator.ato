@@ -89,9 +89,9 @@ module LM5164Buck from AdjustableRegulator:
     assert Ca.value >= 10 / (switching_frequency * 1/(1/feedback_div.r_bottom.value + 1/feedback_div.r_top.value))
     # Equation 25:
     Ton = (r_switching_frequency.value / 1kΩ) / (v_in/1V * 2.5) * 1us
-    Ton_min = 70 / (48 * 2.5) * 1us
-    Ton_max = 70 / (68 * 2.5) * 1us
-    assert Ra.value * Ca.value <= (v_in - v_out) * Ton_max / 20mV # Using Ton here breaks the build?!
+    #Ton_min = 70 / (48 * 2.5) * 1us
+    #Ton_max = 70 / (68 * 2.5) * 1us
+    assert Ra.value * Ca.value <= (v_in - v_out) * Ton / 20mV # Using Ton here breaks the build?!
     # Equation 26:
     assert Cb.value >= tTR_setting / (3 * feedback_div.r_top.value)
 
@@ -173,7 +173,7 @@ module LM5164_Reg10V from LM5164Buck:
     switching_frequency = 500kHz +/- 20%
     output_ripple = 120mV
 
-    r_switching_frequency.value = 51kΩ +/- 1%
+    #r_switching_frequency.value = 51kΩ +/- 1%
     Ra.value = 357kΩ +/- 1%
     Ca.value = 1nF +/- 10%
     Cb.value = 100pF +/- 10%

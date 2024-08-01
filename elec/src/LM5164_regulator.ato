@@ -65,10 +65,11 @@ module LM5164Buck from AdjustableRegulator:
     # Force bottom value so we get expected resistance for ripple generation
     feedback_div.r_bottom.value = 51kΩ +/- 1%
     i_q = 20uA to 100uA 
+    # TI recommends:
+    assert feedback_div.r_top.value within 100 kΩ to 1 MΩ
 
     # Feedback Ripple Generation method: Type 3 
     # This method is chosen since it does not rely on output capacitor ESR for stability
-    # TODO: generate values dynamically
     Ra = new Resistor
     Ca = new Capacitor
     Cb = new Capacitor
@@ -77,29 +78,29 @@ module LM5164Buck from AdjustableRegulator:
     Ra.p2 ~ Ca.p2
     Cb.p1 ~ Ca.p2
     Cb.p2 ~ ic.FB
-    Ra.value = 374kΩ +/- 1%
-    Ca.value = 4.7nF +/- 10%
-    Cb.value = 47pF +/- 10%
     #assert Cb.ceramic = "C0G"
     Ra.package = "0402"
     Ca.package = "0402"
     Cb.package = "0402"
-    # # Check values against datasheet equations:
-    # Ton = r_switching_frequency.value / 1kΩ / (v_in/1V * 2.5) * 1us # On-time from equation 11
-    # tTR_setting = 75us # Desired load transient response settling time
-    # # Equation 24:
-    # assert Ca.value >= 10F / (switching_frequency * 1/(1/feedback_div.r_bottom.value + 1/feedback_div.r_top.value)/1Ω)
-    # # Equation 25:
-    # assert Ra.value * Ca.value <= (v_in - v_out) * Ton / 20mV
-    # # Equation 26:
-    # assert Cb.value >= tTR_setting / (3 * feedback_div.r_bottom.value)
+
+    # Check values against datasheet equations:
+    tTR_setting = 75us # Desired load transient response settling time
+    # Equation 24:
+    assert Ca.value >= 10 / (switching_frequency * 1/(1/feedback_div.r_bottom.value + 1/feedback_div.r_top.value))
+    # Equation 25:
+    Ton = (r_switching_frequency.value / 1kΩ) / (v_in/1V * 2.5) * 1us
+    Ton_min = 70 / (48 * 2.5) * 1us
+    Ton_max = 70 / (68 * 2.5) * 1us
+    assert Ra.value * Ca.value <= (v_in - v_out) * Ton_max / 20mV # Using Ton here breaks the build?!
+    # Equation 26:
+    assert Cb.value >= tTR_setting / (3 * feedback_div.r_top.value)
 
     # 6.3.5 On-Time Generator / Switching Frequency
     r_switching_frequency = new Resistor  # Rt in the datasheet
     ic.RON ~ r_switching_frequency.p1; r_switching_frequency.p2 ~ ic.GND
     # Use an assertion here rather than an assignment in case we replace the resistor elsewhere
     assert r_switching_frequency.value within (v_out/1V * 2500) / (switching_frequency / 1kHz) * 1kΩ
-    assert (r_switching_frequency.value / 1kΩ) / (v_in/1V * 2.5) * 1us > 50ns
+    assert Ton > 50ns
     r_switching_frequency.footprint = "R0402"
 
     # 6.3.9 Optional: Enable / UVLO
@@ -161,42 +162,21 @@ module LM5164Buck from AdjustableRegulator:
     c_in_hf -> _NotImplementedCapacitor
     c_out -> _NotImplementedCapacitor
 
-###################################################
-# Example usage: Stage 1
-# First, find a set of working values for the module
-###################################################
-module Reg10V_1 from LM5164Buck:
-    v_in = 48V to 68V
-    v_out = 10V +/- 10%
-    switching_frequency = 400kHz +/- 5%
-    output_ripple = 120mV
-
-    inductor.rated_current = 1.25A
-    inductor.value = 68uH +/- 20%
-
-    c_in_bulk.value = 2uF to 10uF
-    c_in_bulk.voltage = 100V
-    c_in_hf.value = 100nF to 1uF
-    c_in_hf.voltage = 100V
-
-    c_out.voltage = 25V
-    c_out.value = 10uF
-    c_out.esr = 40mΩ
-
-
 from "power_parts.ato" import CDRH104RT125NP_680MC, HMK325C7475KM_PE, CL21B104KCFNNNE, CL21A226MAQNNNE
 
-###################################################
-# Example usage: Stage 2
-# Select specific components once you've found their specs
-###################################################
-
 module LM5164_Reg10V from LM5164Buck:
+    """
+    Actual working module with parts selected. Use this!
+    """
     v_in = 48V to 68V
     v_out = 10V +/- 10%
-    switching_frequency = 400kHz +/- 5%
+    switching_frequency = 500kHz +/- 20%
     output_ripple = 120mV
 
+    r_switching_frequency.value = 51kΩ +/- 1%
+    Ra.value = 357kΩ +/- 1%
+    Ca.value = 1nF +/- 10%
+    Cb.value = 100pF +/- 10%
     # 68uF buck inductor, rated to 1.25A
     inductor -> CDRH104RT125NP_680MC
 

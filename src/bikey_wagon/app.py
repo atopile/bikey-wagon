@@ -25,9 +25,10 @@ class MyApp(Module):
 
         # modules ------------------------------------
         class _NODEs(Module.NODES()):
-            submodule = MyApplicationModule()
-            my_part = MyLibraryModule()
-            pass
+            # submodule = MyApplicationModule()
+            # my_part = MyLibraryModule()
+            # pass
+            r1 = F.Resistor()
 
         class _PARAMs(Module.PARAMS()):
             pass
@@ -45,6 +46,7 @@ class MyApp(Module):
             net.IFs.part_of.connect(mif)
 
         # parametrization ----------------------------
+        self.NODEs.r1.PARAMs.resistance.merge(F.Range(900, 1100))
 
         # specialize
 

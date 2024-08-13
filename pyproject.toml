@@ -23,7 +23,7 @@ homepage = "https://github.com/atopile/bikey-wagon-faebryk"
 
 [tool.poetry.dependencies]
 python = "^3.12,<3.13"                                                        # max allowed version by scipy
-faebryk = { git = "https://github.com/faebryk/faebryk.git", branch = "main" }
+faebryk = { path = "/Users/mattwildoer/Projects/faebryk", develop = true }
 typer = { version = "^0.9.0", extras = ["all"] }
 
 [tool.poetry.group.dev.dependencies]

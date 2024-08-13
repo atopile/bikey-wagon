@@ -5,8 +5,9 @@ import logging
 
 import faebryk.library._F as F
 from faebryk.core.core import Module
-from bikey_wagon.library.my_library_module import MyLibraryModule
-from bikey_wagon.modules.my_application_module import MyApplicationModule
+# from bikey_wagon.library.my_library_module import MyLibraryModule
+# from bikey_wagon.modules.my_application_module import MyApplicationModule
+from bikey_wagon.library.ESP32_C3_MINI_1 import ESP32_C3_MINI_1
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +30,7 @@ class MyApp(Module):
             # my_part = MyLibraryModule()
             # pass
             r1 = F.Resistor()
+            esp32 = ESP32_C3_MINI_1()
 
         class _PARAMs(Module.PARAMS()):
             pass

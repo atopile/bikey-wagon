@@ -1,0 +1,4 @@
+(fp_lib_table
+  (lib (name "logo")(type "KiCad")(uri "${KIPRJMOD}/../libs/footprints/")(options "")(descr ""))
+  (lib (name "lcsc")(type "KiCad")(uri "${KIPRJMOD}/../libs/lcsc.pretty")(options "")(descr ""))
+)

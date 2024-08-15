@@ -217,7 +217,10 @@ class ESP32_S3_WROOM_1_N16R8(Module):
         self.add_trait(can_attach_to_footprint_via_pinmap(self.pinmap))
 
         # Connect up basics
-        self.add_trait(has_single_electric_reference_defined(self.IFs.pwr3v3))
+        ref = ElectricLogic.connect_all_module_references(self)
+        self.add_trait(has_single_electric_reference_defined(ref))
+        ref.connect(self.IFs.pwr3v3)
+
         x.serial.IFs.rx.connect(x.gpio[36].IFs.signal)
         x.serial.IFs.tx.connect(x.gpio[37].IFs.signal)
         x.boot_mode.connect(x.gpio[0].IFs.signal)

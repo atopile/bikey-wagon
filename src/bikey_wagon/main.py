@@ -12,6 +12,9 @@ from pathlib import Path
 
 import faebryk.libs.picker.lcsc as lcsc
 import typer
+from bikey_wagon.app import MyApp
+from bikey_wagon.pcb import transform_pcb
+from bikey_wagon.pickers import add_app_pickers
 from faebryk.core.util import get_all_modules
 from faebryk.exporters.esphome.esphome import dump_esphome_config, make_esphome_config
 from faebryk.exporters.parameters.parameters_to_file import export_parameters_to_file
@@ -23,9 +26,6 @@ from faebryk.libs.app.pcb import apply_design
 from faebryk.libs.logging import setup_basic_logging
 from faebryk.libs.picker.jlcpcb.pickers import add_jlcpcb_pickers
 from faebryk.libs.picker.picker import pick_part_recursively
-from bikey_wagon.app import MyApp
-from bikey_wagon.pcb import transform_pcb
-from bikey_wagon.pickers import add_app_pickers
 from typing_extensions import Annotated
 
 # logging settings

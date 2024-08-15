@@ -4,10 +4,14 @@
 import logging
 
 import faebryk.library._F as F
-from faebryk.core.core import Module
+
 # from bikey_wagon.library.my_library_module import MyLibraryModule
 # from bikey_wagon.modules.my_application_module import MyApplicationModule
-from bikey_wagon.library.ESP32_C3_MINI_1 import ESP32_C3_MINI_1
+from bikey_wagon.library.ESP32_S3_WROOM_1_N16R8 import ESP32_S3_WROOM_1_N16R8_Kit
+from faebryk.core.core import Module
+from faebryk.core.util import get_all_nodes
+from faebryk.library.Switch import Switch2
+from faebryk.libs.picker.jlcpcb.pickers import StaticJLCPCBPartPicker
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +34,7 @@ class MyApp(Module):
             # my_part = MyLibraryModule()
             # pass
             r1 = F.Resistor()
-            esp32 = ESP32_C3_MINI_1()
+            esp32 = ESP32_S3_WROOM_1_N16R8_Kit()
 
         class _PARAMs(Module.PARAMS()):
             pass
@@ -51,5 +55,19 @@ class MyApp(Module):
         self.NODEs.r1.PARAMs.resistance.merge(F.Range(900, 1100))
 
         # specialize
+
+        # default components for accessories
+        for n in get_all_nodes(self):
+            match n:
+                case Switch2():
+                    F.has_multi_picker.add_to_module(
+                        n,
+                        float("inf"),
+                        StaticJLCPCBPartPicker(
+                            mfr="BZCN", mfr_pn="TSB008A2530A", lcsc_pn="C2888954"
+                        ),
+                    )
+                case _:
+                    pass
 
         # set global params

@@ -27,7 +27,7 @@ from faebryk.library.I2C import I2C
 from faebryk.library.Range import Range
 from faebryk.library.Resistor import Resistor
 from faebryk.library.Set import Set
-from faebryk.library.Switch import Switch2
+from faebryk.library.Switch import Switch
 from faebryk.library.UART_Base import UART_Base
 from faebryk.library.USB2_0 import USB2_0
 from faebryk.libs.picker.picker import DescriptiveProperties
@@ -255,7 +255,7 @@ class ESP32_S3_WROOM_1_N16R8_Kit(Module):
 
         class _NODEs(Module.NODES()):
             uc = ESP32_S3_WROOM_1_N16R8()
-            switches = [Switch2(Electrical), Switch2(Electrical)]
+            switches = times(2, Switch(Electrical))
 
         self.NODEs = _NODEs(self)
 

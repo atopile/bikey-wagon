@@ -7,6 +7,7 @@ It sets up several paths and calls the app to create the graph.
 Afterwards it uses the graph to export to different artifacts (e.g netlist).
 """
 
+# %%
 import logging
 from pathlib import Path
 
@@ -32,7 +33,10 @@ from typing_extensions import Annotated
 logger = logging.getLogger(__name__)
 
 
+
+# %%
 def main(
+    # %% - Run this indented block to provide args for the inner
     export_manufacturing_artifacts: Annotated[
         bool, typer.Option(help="Export manufacturing artifacts (gerbers, BOM, etc.)")
     ] = False,
@@ -45,8 +49,9 @@ def main(
     export_parameters: Annotated[
         bool, typer.Option(help="Export project parameters to a file")
     ] = False,
+    # %%
 ):
-    # paths --------------------------------------------------
+    # %% paths --------------------------------------------------
     root = Path(__file__).parent.parent.parent
     kicad_prj_path = root.joinpath("source")
     pcbfile = kicad_prj_path.joinpath("main.kicad_pcb")
@@ -66,11 +71,11 @@ def main(
 
     app = MyApp()
 
-    # fill unspecified parameters ----------------------------
+    # %% fill unspecified parameters ----------------------------
     logger.info("Filling unspecified parameters")
     replace_tbd_with_any(app, recursive=True, loglvl=logging.DEBUG)
 
-    # pick parts ---------------------------------------------
+    # %% pick parts ---------------------------------------------
     logger.info("Picking parts")
     modules = {n.get_most_special() for n in get_all_modules(app)}
     for n in modules:
@@ -78,15 +83,15 @@ def main(
         add_app_pickers(n)
     pick_part_recursively(app)
 
-    # graph --------------------------------------------------
+    # %% graph --------------------------------------------------
     logger.info("Make graph")
     G = app.get_graph()
 
-    # checks -------------------------------------------------
+    # %% checks -------------------------------------------------
     logger.info("Running checks")
     run_checks(app, G)
 
-    # pcb ----------------------------------------------------
+    # %% pcb ----------------------------------------------------
     logger.info("Make netlist & pcb")
     apply_design(pcbfile, netlist_path, G, app, transform_pcb)
 

@@ -20,6 +20,7 @@ from faebryk.core.util import get_all_modules
 from faebryk.exporters.esphome.esphome import dump_esphome_config, make_esphome_config
 from faebryk.exporters.parameters.parameters_to_file import export_parameters_to_file
 from faebryk.exporters.pcb.kicad.artifacts import export_svg
+from faebryk.exporters.visualize.interactive_graph import interactive_graph
 from faebryk.libs.app.checks import run_checks
 from faebryk.libs.app.manufacturing import export_pcba_artifacts
 from faebryk.libs.app.parameters import replace_tbd_with_any
@@ -69,7 +70,10 @@ def main(
     lcsc.BUILD_FOLDER = build_dir
     lcsc.LIB_FOLDER = root.joinpath("libs")
 
+    # %% app ----------------------------------------------------
     app = MyApp()
+
+    # interactive_graph(app.get_graph())
 
     # %% fill unspecified parameters ----------------------------
     logger.info("Filling unspecified parameters")

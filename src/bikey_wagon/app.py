@@ -4,14 +4,12 @@
 import logging
 
 import faebryk.library._F as F
-from numpy import isin
+# from bikey_wagon.library.DRV8300 import DRV8300PowerStage
 
 # from bikey_wagon.library.my_library_module import MyLibraryModule
 # from bikey_wagon.modules.my_application_module import MyApplicationModule
 from bikey_wagon.library.ESP32_S3_WROOM_1_N16R8 import ESP32_S3_WROOM_1_N16R8_Kit
-from bikey_wagon.library.DRV8300 import DRV8300PowerStage
-from faebryk.core.core import Module
-from faebryk.core.util import get_node_children_all
+from faebryk.core.module import Module
 from faebryk.library.Switch import _TSwitch
 from faebryk.libs.picker.jlcpcb.pickers import StaticJLCPCBPartPicker
 
@@ -27,40 +25,27 @@ Avoid putting any low-level modules or parameter specializations here.
 
 
 class MyApp(Module):
-    def __init__(self) -> None:
-        super().__init__()
+    r1: F.Resistor
+    esp32: ESP32_S3_WROOM_1_N16R8_Kit
+    # pwr_stage = DRV8300PowerStage()
 
-        # modules ------------------------------------
-        class _NODEs(Module.NODES()):
-            # submodule = MyApplicationModule()
-            # my_part = MyLibraryModule()
-            # pass
-            r1 = F.Resistor()
-            esp32 = ESP32_S3_WROOM_1_N16R8_Kit()
-            pwr_stage = DRV8300PowerStage()
+    def __preinit__(self):
+    #     # net names ----------------------------------
+    #     nets = {
+    #         # "in_5v": ...power.IFs.hv,
+    #         # "gnd": ...power.IFs.lv,
+    #     }
+    #     for net_name, mif in nets.items():
+    #         net = F.Net.with_name(net_name)
+    #         net.IFs.part_of.connect(mif)
 
-        class _PARAMs(Module.PARAMS()):
-            pass
+    #     # parametrization ----------------------------
+    #     self.NODEs.r1.PARAMs.resistance.merge(F.Range(900, 1100))
 
-        self.NODEs = _NODEs(self)
-        self.PARAMs = _PARAMs(self)
+    #     # specialize
 
-        # net names ----------------------------------
-        nets = {
-            # "in_5v": ...power.IFs.hv,
-            # "gnd": ...power.IFs.lv,
-        }
-        for net_name, mif in nets.items():
-            net = F.Net.with_name(net_name)
-            net.IFs.part_of.connect(mif)
-
-        # parametrization ----------------------------
-        self.NODEs.r1.PARAMs.resistance.merge(F.Range(900, 1100))
-
-        # specialize
-
-        # default components for accessories
-        for n in get_node_children_all(self):
+    #     # default components for accessories
+        for n in self.get_node_children_all():
             if isinstance(n, _TSwitch):
                 F.has_multi_picker.add_to_module(
                     n,
@@ -70,5 +55,5 @@ class MyApp(Module):
                     ),
                 )
 
-        # set global params
-        self.NODEs.pwr_stage.PARAMs.phase_current.merge(F.Range(50, 200))
+    #     # set global params
+    #     self.NODEs.pwr_stage.PARAMs.phase_current.merge(F.Range(50, 200))

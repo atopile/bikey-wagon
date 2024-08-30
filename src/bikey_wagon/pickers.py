@@ -4,10 +4,11 @@
 import logging
 
 import faebryk.library._F as F
-from faebryk.core.core import Module
+from faebryk.core.module import Module
 from faebryk.library.Constant import Constant
 from faebryk.libs.picker.lcsc import LCSC_Part
 from faebryk.libs.picker.picker import PickerOption, pick_module_by_params
+from faebryk.libs.units import P
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +27,7 @@ def pick_resistor(resistor: F.Resistor):
         [
             PickerOption(
                 part=LCSC_Part(partno="C25076"),
-                params={"resistance": Constant(100)},
+                params={"resistance": Constant(100 * P.ohm)},
             ),
         ],
     )
@@ -45,7 +46,7 @@ def pick_led(module: F.LED):
                     "forward_voltage": Constant(3.7),
                     "max_current": Constant(100e-3),
                 },
-                pinmap={"1": module.IFs.cathode, "2": module.IFs.anode},
+                pinmap={"1": module.cathode, "2": module.anode},
             ),
             PickerOption(
                 part=LCSC_Part(partno="C72041"),
@@ -55,7 +56,7 @@ def pick_led(module: F.LED):
                     "forward_voltage": Constant(3.1),
                     "max_current": Constant(100e-3),
                 },
-                pinmap={"1": module.IFs.cathode, "2": module.IFs.anode},
+                pinmap={"1": module.cathode, "2": module.anode},
             ),
         ],
     )

@@ -1,63 +1,36 @@
+from functools import partial
 import logging
-from typing import Sequence
+from typing import Callable, Sequence
 
-from faebryk.core.core import Module
+from faebryk.core.module import Module
 from faebryk.core.util import (
     specialize_module,
 )
+from faebryk.library import _F as F
 from faebryk.library.can_attach_to_footprint_via_pinmap import (
     can_attach_to_footprint_via_pinmap,
 )
-from faebryk.library.can_be_decoupled import can_be_decoupled
-from faebryk.library.can_bridge_defined import can_bridge_defined
-from faebryk.library.Capacitor import Capacitor
-from faebryk.library.Constant import Constant
-from faebryk.library.Electrical import Electrical
-from faebryk.library.ElectricLogic import ElectricLogic
-from faebryk.library.ElectricPower import ElectricPower
-from faebryk.library.has_datasheet_defined import has_datasheet_defined
-from faebryk.library.has_defined_descriptive_properties import (
-    has_defined_descriptive_properties,
-)
-from faebryk.library.has_designator_prefix_defined import has_designator_prefix_defined
-from faebryk.library.has_single_electric_reference_defined import (
-    has_single_electric_reference_defined,
-)
-from faebryk.library.I2C import I2C
-from faebryk.library.Range import Range
-from faebryk.library.Resistor import Resistor
-from faebryk.library.Set import Set
-from faebryk.library.Switch import Switch
-from faebryk.library.UART_Base import UART_Base
-from faebryk.library.USB2_0 import USB2_0
+from faebryk.libs.library import L
 from faebryk.libs.picker.picker import DescriptiveProperties
-from faebryk.libs.units import k, n, u
+from faebryk.libs.units import P, Quantity
 from faebryk.libs.util import times
 
 logger = logging.getLogger(__name__)
 
 
 class _RCFilter(Module):
-    def __init__(self) -> None:
-        super().__init__()
+    input: F.Electrical
+    output: F.Electrical
+    lv: F.Electrical
 
-        class _IFS(Module.IFS()):
-            input = Electrical()
-            output = Electrical()
-            lv = Electrical()
+    resistor: F.Resistor
+    capacitor: F.Capacitor
 
-        self.IFs = _IFS(self)
+    def __preinit__(self):
+        self.input.connect_via(self.resistor, self.output)
+        self.output.connect_via(self.capacitor, self.lv)
 
-        class _NODES(Module.NODES()):
-            resistor = Resistor()
-            capacitor = Capacitor()
-
-        self.NODEs = _NODES(self)
-
-        self.IFs.input.connect_via(self.NODEs.resistor, self.IFs.output)
-        self.IFs.output.connect_via(self.NODEs.capacitor, self.IFs.lv)
-
-        self.add_trait(can_bridge_defined(self.IFs.input, self.IFs.output))
+        self.add(F.can_bridge_defined(self.input, self.output))
 
 
 # class BalancedCrystal(Module):
@@ -69,11 +42,11 @@ class _RCFilter(Module):
 
 #         self.PARAMs = _PARAMS(self)
 
-#         class _IFS(Module.IFS()):
+#         class (Module()):
 #             unnamed = times(2, Electrical())
 #             gnd = Electrical()
 
-#         self.IFs = _IFS(self)
+#         self = (self)
 
 #         class _NODES(Module.NODES()):
 #             crystal = Crystal()
@@ -84,24 +57,95 @@ class _RCFilter(Module):
 #         self.NODEs.capacitors[0].PARAMs.capacitance.merge(self.PARAMs.balance_capacitance)
 
 
-class MultiCapacitor(Capacitor):
-    def __init__(self, count: int) -> None:
-        super().__init__()
-
-        class _NODES(Module.NODES()):
-            capacitors = times(count, Capacitor)
-
-        self.NODEs = _NODES(self)
+class MultiCapacitor(F.Capacitor):
+    capacitors: list[F.Capacitor]
 
     @classmethod
-    def with_values(cls, values: Sequence[float]):
-        self = cls(len(values))
-        for i, value in enumerate(values):
-            self.NODEs.capacitors[i].PARAMs.capacitance.merge(Constant(value))
+    def explicit(
+        cls,
+        values: Sequence[Quantity],
+        builder: Callable[[F.Capacitor], None] = lambda _: None,
+    ):
+        self = cls()
+
+        for value in values:
+            cap = F.Capacitor()
+            def _build_capacitance(v):
+                def __(cap: F.Capacitor):
+                    cap.capacitance.merge(v)
+                return __
+            cap.builder(builder).builder(_build_capacitance(value))
+            self.unnamed[0].connect_via(cap, self.unnamed[1])
+            self.add(cap, container=self.capacitors)
+
         return self
 
 
 class ESP32_S3_WROOM_1_N16R8(Module):
+    pwr3v3: F.ElectricPower
+    gpio = L.d_field(
+        lambda: {
+            v: F.ElectricLogic()
+            for v in ESP32_S3_WROOM_1_N16R8.datasheet_name_to_gpio.values()
+        }
+    )
+    enable: F.ElectricLogic
+    serial: F.UART_Base
+    boot_mode: F.ElectricLogic
+
+    def __preinit__(self) -> None:
+        super().__preinit__()
+
+        # Name some important aliases
+        _gnd = self.pwr3v3.lv
+
+        gpio_pin_map = {
+            pin: self.gpio[self.datasheet_name_to_gpio[io_name]]
+            for pin, io_name in self.datasheet_pin_names.items()
+            if io_name in self.datasheet_name_to_gpio
+        }
+        self.pinmap = {
+            **gpio_pin_map,
+            "1": _gnd,
+            "2": self.pwr3v3.hv,
+            "3": self.enable,
+            "40": _gnd,
+            "41": _gnd,
+        }
+        self.add(can_attach_to_footprint_via_pinmap(self.pinmap))
+
+        # Connect up basics
+        ref = F.ElectricLogic.connect_all_module_references(self)
+        self.add(F.has_single_electric_reference_defined(ref))
+        ref.connect(self.pwr3v3)
+
+        self.serial.rx.connect(self.gpio[36].signal)
+        self.serial.tx.connect(self.gpio[37].signal)
+        self.boot_mode.connect(self.gpio[0].signal)
+
+        # Configure specs
+        # https://www.espressif.com/sites/default/files/documentation/esp32-c3_technical_reference_manual_en.pdf#uart
+        self.serial.baud.merge(F.Range(0, 5000000))
+
+        self.pwr3v3.voltage.merge(F.Range(3.0 * P.V, 3.6 * P.V))
+
+        # Add basic properties
+        self.add(F.has_designator_prefix_defined("U"))
+
+        self.add(
+            F.has_datasheet_defined(
+                "https://www.espressif.com/sites/default/files/documentation/esp32-s3-wroom-1_wroom-1u_datasheet_en.pdf"
+            )
+        )
+        self.add(
+            F.has_descriptive_properties_defined(
+                {
+                    DescriptiveProperties.manufacturer: "Espressif Systems",
+                    DescriptiveProperties.partno: "ESP32-S3-WROOM-1-N16R8",
+                }
+            )
+        )
+
     datasheet_pin_names = {
         "1": "GND",  # P GND
         "2": "3V3",  # P Power supply
@@ -185,134 +229,66 @@ class ESP32_S3_WROOM_1_N16R8(Module):
         "IO1": 1,
     }
 
-    def __init__(self) -> None:
-        super().__init__()
-
-        class _IFs(Module.IFS()):
-            pwr3v3 = ElectricPower()
-            gpio = {v: ElectricLogic() for v in self.datasheet_name_to_gpio.values()}
-            enable = ElectricLogic()
-            serial = UART_Base()
-            boot_mode = ElectricLogic()
-
-        self.IFs = _IFs(self)
-
-        # Name some important aliases
-        _gnd = self.IFs.pwr3v3.IFs.lv
-        x = self.IFs
-
-        gpio_pin_map = {
-            pin: x.gpio[self.datasheet_name_to_gpio[io_name]]
-            for pin, io_name in self.datasheet_pin_names.items()
-            if io_name in self.datasheet_name_to_gpio
-        }
-        self.pinmap = {
-            **gpio_pin_map,
-            "1": _gnd,
-            "2": x.pwr3v3.IFs.hv,
-            "3": x.enable,
-            "40": _gnd,
-            "41": _gnd,
-        }
-        self.add_trait(can_attach_to_footprint_via_pinmap(self.pinmap))
-
-        # Connect up basics
-        ref = ElectricLogic.connect_all_module_references(self)
-        self.add_trait(has_single_electric_reference_defined(ref))
-        ref.connect(self.IFs.pwr3v3)
-
-        x.serial.IFs.rx.connect(x.gpio[36].IFs.signal)
-        x.serial.IFs.tx.connect(x.gpio[37].IFs.signal)
-        x.boot_mode.connect(x.gpio[0].IFs.signal)
-
-        # Configure specs
-        # https://www.espressif.com/sites/default/files/documentation/esp32-c3_technical_reference_manual_en.pdf#uart
-        x.serial.PARAMs.baud.merge(Range(0, 5000000))
-
-        self.IFs.pwr3v3.PARAMs.voltage.merge(Range(3.0, 3.6))
-
-        # Add basic properties
-        self.add_trait(has_designator_prefix_defined("U"))
-
-        self.add_trait(
-            has_datasheet_defined(
-                "https://www.espressif.com/sites/default/files/documentation/esp32-s3-wroom-1_wroom-1u_datasheet_en.pdf"
-            )
-        )
-        self.add_trait(
-            has_defined_descriptive_properties(
-                {
-                    DescriptiveProperties.manufacturer: "Espressif Systems",
-                    DescriptiveProperties.partno: "ESP32-S3-WROOM-1-N16R8",
-                }
-            )
-        )
-
 
 class ESP32_S3_WROOM_1_N16R8_Kit(Module):
-    def __init__(self) -> None:
-        super().__init__()
+    pwr3v3: F.ElectricPower
+    gpio: dict[int, F.ElectricLogic] = L.d_field(
+        lambda: {
+            v: F.ElectricLogic()
+            for v in ESP32_S3_WROOM_1_N16R8.datasheet_name_to_gpio.values()
+        }
+    )
+    enable: F.ElectricLogic
+    serial: F.UART_Base
+    boot_mode: F.ElectricLogic
+    usb: F.USB2_0
+    i2c: F.I2C
 
-        class _NODEs(Module.NODES()):
-            uc = ESP32_S3_WROOM_1_N16R8()
-            switches = times(2, Switch(Electrical))
+    uc: ESP32_S3_WROOM_1_N16R8
+    switches = L.list_field(2, F.Switch(F.Electrical))
 
-        self.NODEs = _NODEs(self)
-
-        class _IFs(Module.IFS()):
-            # Pass through interfaces
-            pwr3v3 = ElectricPower().connect(self.NODEs.uc.IFs.pwr3v3)
-            gpio = {
-                k: ElectricLogic().connect(gpio)
-                for k, gpio in self.NODEs.uc.IFs.gpio.items()
-            }
-            serial = UART_Base().connect(self.NODEs.uc.IFs.serial)
-
-            # Extensions
-            usb = USB2_0()
-            i2c = I2C()
-
-        self.IFs = _IFs(self)
+    def __preinit__(self):
+        super().__preinit__()
+        from faebryk.core.util import connect_module_mifs_by_name
+        connect_module_mifs_by_name(self, self.uc, allow_partial=True)
 
         # Important references to things
-        _gnd = self.IFs.pwr3v3.IFs.lv
-        _uc = self.NODEs.uc
-        x = self.IFs
+        _gnd = self.pwr3v3.lv
 
         # decouple power supply
-        self.IFs.pwr3v3.get_trait(can_be_decoupled).decouple().builder(
-            lambda c: specialize_module(c, MultiCapacitor.with_values([
-                10 * u,  # 10uF
-                10 * u,  # 10uF
-                100 * n  # 100nF
+        self.pwr3v3.get_trait(F.can_be_decoupled).decouple().builder(
+            lambda c: specialize_module(c, MultiCapacitor.explicit([
+                10 * P.microfarads,  # 10uF
+                10 * P.microfarads,  # 10uF
+                100 * P.nanofarads  # 100nF
             ]))
         )
 
         # boot and enable switches
-        for el, switch in zip([_uc.IFs.boot_mode, _uc.IFs.enable], self.NODEs.switches):
-            el.IFs.signal.connect_via(switch, _gnd)
-            el.get_trait(ElectricLogic.can_be_pulled).pull(up=True).builder(
-                lambda r: r.PARAMs.resistance.merge(10 * k)
+        for el, switch in zip([self.uc.boot_mode, self.uc.enable], self.switches):
+            el.signal.connect_via(switch, _gnd)
+            el.get_trait(F.ElectricLogic.can_be_pulled).pull(up=True).builder(
+                lambda r: r.resistance.merge(F.Range(4.7 * P.kiloohms, 10 * P.kiloohms))
             )
 
         # USB
-        x.usb.IFs.usb_if.IFs.d.IFs.n.connect(x.gpio[19].IFs.signal)
-        x.usb.IFs.usb_if.IFs.d.IFs.p.connect(x.gpio[20].IFs.signal)
+        self.usb.usb_if.d.n.connect(self.gpio[19].signal)
+        self.usb.usb_if.d.p.connect(self.gpio[20].signal)
 
         # I2C
-        self.IFs.i2c.IFs.scl.connect(x.gpio[6].IFs.signal)
-        self.IFs.i2c.IFs.sda.connect(x.gpio[7].IFs.signal)
-        self.IFs.i2c.PARAMs.frequency.merge(
-            Set(
+        self.i2c.scl.connect(self.gpio[6].signal)
+        self.i2c.sda.connect(self.gpio[7].signal)
+        self.i2c.frequency.merge(
+            F.Set(
                 [
-                    I2C.define_max_frequency_capability(speed)
+                    F.I2C.define_max_frequency_capability(speed)
                     for speed in [
-                        I2C.SpeedMode.low_speed,
-                        I2C.SpeedMode.standard_speed,
+                        F.I2C.SpeedMode.low_speed,
+                        F.I2C.SpeedMode.standard_speed,
                     ]
                 ]
                 + [
-                    Range(10 * k, 800 * k)
+                    F.Range(10_000, 800_000)
                 ],  # TODO: should be range 200k-800k, but breaks parameter merge
             )
         )

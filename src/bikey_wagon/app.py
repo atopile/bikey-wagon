@@ -47,13 +47,12 @@ class MyApp(Module):
     #     # default components for accessories
         for n in self.get_node_children_all():
             if isinstance(n, _TSwitch):
-                F.has_multi_picker.add_to_module(
-                    n,
+                n.add(F.has_multi_picker(
                     float("inf"),
                     StaticJLCPCBPartPicker(
                         mfr="BZCN", mfr_pn="TSB008A2530A", lcsc_pn="C2888954"
                     ),
-                )
+                ))
 
     #     # set global params
     #     self.NODEs.pwr_stage.PARAMs.phase_current.merge(F.Range(50, 200))

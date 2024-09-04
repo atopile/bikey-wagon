@@ -4,7 +4,7 @@
 import logging
 
 import faebryk.library._F as F
-# from bikey_wagon.library.DRV8300 import DRV8300PowerStage
+# from bikey_wagon.library.DRV8300 import DRV8300PowerStage3PWM
 
 # from bikey_wagon.library.my_library_module import MyLibraryModule
 # from bikey_wagon.modules.my_application_module import MyApplicationModule
@@ -27,7 +27,7 @@ Avoid putting any low-level modules or parameter specializations here.
 class MyApp(Module):
     r1: F.Resistor
     esp32: ESP32_S3_WROOM_1_N16R8_Kit
-    # pwr_stage = DRV8300PowerStage()
+    # pwr_stage = DRV8300PowerStage3PWM()
 
     def __preinit__(self):
     #     # net names ----------------------------------
@@ -45,7 +45,7 @@ class MyApp(Module):
     #     # specialize
 
     #     # default components for accessories
-        for n in self.get_node_children_all():
+        for n in self.get_children_modules():
             if isinstance(n, _TSwitch):
                 n.add(F.has_multi_picker(
                     float("inf"),

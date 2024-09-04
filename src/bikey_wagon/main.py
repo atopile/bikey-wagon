@@ -16,11 +16,9 @@ import typer
 from bikey_wagon.app import MyApp
 from bikey_wagon.pcb import transform_pcb
 from bikey_wagon.pickers import add_app_pickers
-from faebryk.core.util import get_all_modules
 from faebryk.exporters.esphome.esphome import dump_esphome_config, make_esphome_config
 from faebryk.exporters.parameters.parameters_to_file import export_parameters_to_file
 from faebryk.exporters.pcb.kicad.artifacts import export_svg
-from faebryk.exporters.visualize.interactive_graph import interactive_graph
 from faebryk.libs.app.checks import run_checks
 from faebryk.libs.app.manufacturing import export_pcba_artifacts
 from faebryk.libs.app.parameters import replace_tbd_with_any
@@ -73,15 +71,13 @@ def main(
     # %% app ----------------------------------------------------
     app = MyApp()
 
-    # interactive_graph(app.get_graph())
-
     # %% fill unspecified parameters ----------------------------
     logger.info("Filling unspecified parameters")
     replace_tbd_with_any(app, recursive=True, loglvl=logging.DEBUG)
 
     # %% pick parts ---------------------------------------------
     logger.info("Picking parts")
-    modules = {n.get_most_special() for n in get_all_modules(app)}
+    modules = {n.get_most_special() for n in app.get_children_modules(app)}
     for n in modules:
         add_jlcpcb_pickers(n, base_prio=10)
         add_app_pickers(n)
